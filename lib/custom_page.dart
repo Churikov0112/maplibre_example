@@ -42,7 +42,7 @@ class _MarkersPageState extends State<MarkersPage> {
             textHaloWidth: 20.0,
             textHaloColor: '#FFFFFF',
             textField: publicVehicle.routeShortName,
-            textOffset: const Offset(1.0, 1.0),
+            textOffset: const Offset(2.0, 2.0),
             iconImage: "assets/raster/markers/vehicle_marker.png",
           ),
       ],
