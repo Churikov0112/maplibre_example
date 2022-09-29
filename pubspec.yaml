@@ -35,6 +35,8 @@ dependencies:
         url: https://github.com/m0nac0/flutter-maplibre-gl.git
         ref: main
 
+  http: ^0.13.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
