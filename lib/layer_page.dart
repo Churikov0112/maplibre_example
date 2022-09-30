@@ -114,7 +114,6 @@ class LayerState extends State<LayerPage> {
         iconImage: "assets/raster/markers/vehicle_marker.png",
         iconSize: 2,
         iconAllowOverlap: true,
-        textAllowOverlap: true,
       ),
       minzoom: 11,
     );
@@ -148,13 +147,13 @@ Map<String, dynamic> _movingFeature(double t) {
     "features": [
       {
         "type": "Feature",
-        "properties": {"name": "POGAČAR Tadej"},
+        "properties": {"name": "22"},
         "id": 10,
         "geometry": {"type": "Point", "coordinates": makeLatLong(t)}
       },
       {
         "type": "Feature",
-        "properties": {"name": "VAN AERT Wout"},
+        "properties": {"name": "24"},
         "id": 11,
         "geometry": {"type": "Point", "coordinates": makeLatLong(t + 0.15)}
       },
