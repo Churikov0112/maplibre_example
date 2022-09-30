@@ -103,6 +103,7 @@ class LayerState extends State<LayerPage> {
       "moving",
       "moving",
       SymbolLayerProperties(
+        iconRotationAlignment: "map",
         textField: [Expressions.get, "name"],
         textHaloWidth: 1,
         textSize: 10,
