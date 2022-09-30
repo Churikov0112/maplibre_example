@@ -13,12 +13,9 @@ class MarkersPage extends StatefulWidget {
 class _MarkersPageState extends State<MarkersPage> {
   MaplibreMapController? controller;
   Symbol? _selectedSymbol;
-  // bool _iconAllowOverlap = false;
 
   void _onMapCreated(MaplibreMapController controller) {
     this.controller = controller;
-    controller.setSymbolIconAllowOverlap(true);
-    controller.setSymbolTextAllowOverlap(true);
     controller.onSymbolTapped.add(_onSymbolTapped);
   }
 
@@ -32,28 +29,72 @@ class _MarkersPageState extends State<MarkersPage> {
 
   void _addPublicVehicleMarker({
     required List<PublicVehicleModel> publicVehicles,
-  }) {
-    controller!.addSymbols(
-      [
-        for (var publicVehicle in publicVehicles)
-          SymbolOptions(
-            iconRotate: publicVehicle.bearing,
-            geometry: publicVehicle.coords,
-            textHaloWidth: 20.0,
-            textHaloColor: '#FFFFFF',
-            textField: publicVehicle.routeShortName,
-            textOffset: const Offset(2.0, 2.0),
-            iconImage: "assets/raster/markers/vehicle_marker.png",
-          ),
-      ],
-    );
+  }) async {
+    // final _points = {
+    //   {
+    //     "type": "Feature",
+    //     "properties": {
+    //       "name": "Van Dorn Street",
+    //       "marker-color": "#0000ff",
+    //       "marker-symbol": "rail-metro",
+    //       "line": "blue",
+    //     },
+    //     "geometry": {
+    //       "type": "Point",
+    //       "coordinates": [60.0, 30.0]
+    //     }
+    //   },
+    // };
+
+    // await controller!.addSource("points", GeojsonSourceProperties(data: _points));
+
+    // await controller.addSymbolLayer(
+    //   "points",
+    //   "publicVehicles",
+    //   SymbolLayerProperties(
+    //     lineColor: Colors.indigo.toHexStringRGB(),
+    //     lineCap: "round",
+    //     lineJoin: "round",
+    //     lineWidth: 3,
+    //   ),
+    // );
+    // }
+
+    // controller!.addSymbols(
+    //   [
+    //     for (var publicVehicle in publicVehicles)
+    //       SymbolOptions(
+    //         iconRotate: controller!.cameraPosition?.bearing,
+    //         geometry: publicVehicle.coords,
+    //         textHaloWidth: 20.0,
+    //         textHaloColor: '#FFFFFF',
+    //         textField: publicVehicle.routeShortName,
+    //         textOffset: const Offset(2.0, 2.0),
+    //         iconImage: "assets/raster/markers/vehicle_marker.png",
+    //       ),
+    //   ],
+    // );
   }
 
   void _updateSymbol(Symbol symbol, SymbolOptions changes) async {
     await controller!.updateSymbol(symbol, changes);
   }
 
-  void clearSymbols() {
+  void _onMapRotate() {
+    final vehicleSymbols = controller!.symbolManager!.annotations;
+    for (final symbol in vehicleSymbols) {
+      if (symbol.options.iconRotate != null) {
+        _updateSymbol(
+          symbol,
+          SymbolOptions(
+            iconRotate: symbol.options.iconRotate! + controller!.cameraPosition!.bearing,
+          ),
+        );
+      }
+    }
+  }
+
+  void _clearSymbols() {
     controller!.clearSymbols();
     _selectedSymbol = null;
     setState(() {});
@@ -113,7 +154,6 @@ class _MarkersPageState extends State<MarkersPage> {
           target: LatLng(60.0, 30.3),
           zoom: 11.0,
         ),
-        onMapClick: (point, coords) {},
       ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
@@ -125,7 +165,7 @@ class _MarkersPageState extends State<MarkersPage> {
             child: const Text("Добавить"),
           ),
           const SizedBox(height: 8),
-          ElevatedButton(onPressed: clearSymbols, child: const Text("Очистить")),
+          ElevatedButton(onPressed: _clearSymbols, child: const Text("Очистить")),
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: () {
@@ -134,6 +174,13 @@ class _MarkersPageState extends State<MarkersPage> {
               }
             },
             child: const Text("Двигать выбранный"),
+          ),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () {
+              controller?.moveCamera(CameraUpdate.bearingTo(75));
+            },
+            child: const Text("Поворот камеры"),
           ),
         ],
       ),

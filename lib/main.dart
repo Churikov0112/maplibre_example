@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:maplibre_example/layer_page.dart';
 import 'dart:core';
-
-import 'custom_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: MarkersPage(),
+      home: LayerPage(),
     );
   }
 }
