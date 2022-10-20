@@ -4,14 +4,14 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
-class LayerPage extends StatefulWidget {
-  const LayerPage({Key? key}) : super(key: key);
+class MovingMarkerExample extends StatefulWidget {
+  const MovingMarkerExample({Key? key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => LayerState();
+  State<StatefulWidget> createState() => MovingMarkerExampleState();
 }
 
-class LayerState extends State<LayerPage> {
+class MovingMarkerExampleState extends State<MovingMarkerExample> {
   static const LatLng center = LatLng(-33.86711, 151.1947171);
 
   late MaplibreMapController controller;
@@ -103,6 +103,13 @@ class LayerState extends State<LayerPage> {
       "moving",
       "moving",
       SymbolLayerProperties(
+        //         iconRotate: controller!.cameraPosition?.bearing,
+        //         geometry: publicVehicle.coords,
+        //         textHaloWidth: 20.0,
+        //         textHaloColor: '#FFFFFF',
+        //         textField: publicVehicle.routeShortName,
+        //         textOffset: const Offset(2.0, 2.0),
+        //         iconImage: "assets/raster/markers/vehicle_marker.png",
         iconRotationAlignment: "map",
         textField: [Expressions.get, "name"],
         textHaloWidth: 1,

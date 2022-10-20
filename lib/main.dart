@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:maplibre_example/layer_page.dart';
 import 'dart:core';
+
+import 'package:maplibre_example/widget_as_marker_example/widget_as_marker_example.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: LayerPage(),
+      home: WidgetAsMarkerExample(),
     );
   }
 }
