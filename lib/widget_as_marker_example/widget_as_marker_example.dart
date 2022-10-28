@@ -19,6 +19,8 @@ class LayerState extends State<WidgetAsMarkerExample> {
 
   late MaplibreMapController controller;
 
+  Map<String, Symbol> symbols = {};
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,6 +37,59 @@ class LayerState extends State<WidgetAsMarkerExample> {
           ),
         ],
       ),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            onPressed: () async {
+              await deleteMarker(featureId: "0");
+
+              (_points["features"] as List).first = {
+                "type": "Feature",
+                "id": "0",
+                "properties": {
+                  "assetId": "0",
+                  "title": "title 0",
+                  "description": "description 0",
+                  "imageURL": "https://www.kindpng.com/picc/m/307-3077167_earth-small-icon-hd-png-download.png",
+                },
+                "geometry": {
+                  "type": "Point",
+                  "coordinates": [151.184913929732943 - 0.01 * 1, -33.874874486427181 - 0.01 * 1]
+                }
+              };
+
+              await addMarkerByWidget(feature: (_points["features"] as List).first);
+            },
+            child: const Center(
+              child: Icon(Icons.update),
+            ),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: () async {
+              // (_points["features"] as List).first = {
+              //   "type": "Feature",
+              //   "id": 0,
+              //   "properties": {
+              //     "assetId": "0",
+              //     "title": "title 0",
+              //     "description": "description 0",
+              //     "imageURL": "https://www.kindpng.com/picc/m/307-3077167_earth-small-icon-hd-png-download.png",
+              //   },
+              //   "geometry": {
+              //     "type": "Point",
+              //     "coordinates": [151.184913929732943 + 0.01 * 0, -33.874874486427181 + 0.01 * 0]
+              //   }
+              // };
+              await deleteMarker(featureId: "0");
+            },
+            child: const Center(
+              child: Icon(Icons.delete),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -47,8 +102,17 @@ class LayerState extends State<WidgetAsMarkerExample> {
 
   void onFeatureTap(dynamic featureId, Point<double> point, LatLng latLng) {}
 
+  Future<void> deleteMarker({
+    required String featureId,
+  }) async {
+    // final feature = (_points["features"] as List).firstWhere((feat) => feat['id'] == featureId);
+    final symbol = symbols[featureId];
+    if (symbol != null) {
+      await controller.symbolManager?.remove(symbol);
+    }
+  }
+
   Future<void> addMarkerByWidget({
-    required String assetName,
     required dynamic feature,
   }) async {
     http.Response response = await http.get(
@@ -62,12 +126,11 @@ class LayerState extends State<WidgetAsMarkerExample> {
     );
     Uint8List imageBytes = await screenshotController.captureFromWidget(
       thisWidget,
-      delay: const Duration(milliseconds: 100),
+      delay: const Duration(milliseconds: 1000),
     );
-    await controller.addImage(assetName, imageBytes);
-    await controller.addSymbol(
+    await controller.addImage(feature['id'], imageBytes);
+    symbols[feature['id']] = await controller.addSymbol(
       SymbolOptions(
-        draggable: true,
         iconImage: feature["properties"]["assetId"],
         geometry: LatLng(
           (feature["geometry"]["coordinates"] as List<double>).last,
@@ -85,7 +148,6 @@ class LayerState extends State<WidgetAsMarkerExample> {
       [
         for (final feature in (_points['features'] as List))
           addMarkerByWidget(
-            assetName: '${feature['id']}',
             feature: feature,
           ),
       ],
@@ -111,11 +173,11 @@ Map<String, dynamic> _points = {
     for (var i = 0; i < 50; i++)
       {
         "type": "Feature",
-        "id": i,
+        "id": i.toString(),
         "properties": {
           "assetId": i.toString(),
-          "title": "title 2",
-          "description": "description 2",
+          "title": "title $i",
+          "description": "description $i",
           "imageURL": "https://img.lovepik.com/element/40116/9419.png_300.png",
         },
         "geometry": {
