@@ -41,6 +41,8 @@ class LayerState extends State<WidgetAsMarkerExample> {
   void _onMapCreated(MaplibreMapController controller) {
     this.controller = controller;
     controller.onFeatureTapped.add(onFeatureTap);
+    controller.symbolManager?.setIconAllowOverlap(true);
+    controller.symbolManager?.setIconIgnorePlacement(true);
   }
 
   void onFeatureTap(dynamic featureId, Point<double> point, LatLng latLng) {}
@@ -60,26 +62,24 @@ class LayerState extends State<WidgetAsMarkerExample> {
     );
     Uint8List imageBytes = await screenshotController.captureFromWidget(
       thisWidget,
-      delay: const Duration(milliseconds: 500),
+      delay: const Duration(milliseconds: 100),
     );
     await controller.addImage(assetName, imageBytes);
+    await controller.addSymbol(
+      SymbolOptions(
+        draggable: true,
+        iconImage: feature["properties"]["assetId"],
+        geometry: LatLng(
+          (feature["geometry"]["coordinates"] as List<double>).last,
+          (feature["geometry"]["coordinates"] as List<double>).first,
+        ),
+      ),
+    );
   }
 
   void _onStyleLoadedCallback() async {
-    await controller.addGeoJsonSource("points", _points);
+    // await controller.addGeoJsonSource("points", _points);
     Stopwatch stopwatch = Stopwatch()..start();
-
-    // for (final feature in (_points['features'] as List)) {
-    //   controller.addSymbol(
-    //     SymbolOptions(
-    //       iconImage: feature["properties"]["assetId"],
-    //       geometry: LatLng(
-    //         (feature["geometry"]["coordinates"] as List<double>).first,
-    //         (feature["geometry"]["coordinates"] as List<double>).last,
-    //       ),
-    //     ),
-    //   );
-    // }
 
     await Future.wait(
       [
@@ -92,16 +92,16 @@ class LayerState extends State<WidgetAsMarkerExample> {
     );
     print('doSomething() executed in ${stopwatch.elapsed}');
 
-    await controller.addSymbolLayer(
-      "points",
-      "symbols",
-      const SymbolLayerProperties(
-        // iconRotationAlignment: "map",
-        iconImage: [Expressions.get, "assetId"],
-        iconAllowOverlap: true, // не скрывать маркеры при наложении
-        iconAnchor: "bottom-left",
-      ),
-    );
+    // await controller.addSymbolLayer(
+    //   "points",
+    //   "symbols",
+    //   const SymbolLayerProperties(
+    //     // iconRotationAlignment: "map",
+    //     iconImage: [Expressions.get, "assetId"],
+    //     iconAllowOverlap: true, // не скрывать маркеры при наложении
+    //     iconAnchor: "bottom-left",
+    //   ),
+    // );
   }
 }
 
@@ -116,8 +116,7 @@ Map<String, dynamic> _points = {
           "assetId": i.toString(),
           "title": "title 2",
           "description": "description 2",
-          "imageURL":
-              "https://purepng.com/public/uploads/large/purepng.com-sitting-mansitting-manmansittingresting-1421526921786ju8nx.png",
+          "imageURL": "https://img.lovepik.com/element/40116/9419.png_300.png",
         },
         "geometry": {
           "type": "Point",
