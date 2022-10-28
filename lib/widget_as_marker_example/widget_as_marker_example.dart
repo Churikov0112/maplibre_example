@@ -45,7 +45,7 @@ class LayerState extends State<WidgetAsMarkerExample> {
 
   void onFeatureTap(dynamic featureId, Point<double> point, LatLng latLng) {}
 
-  Future<void> setImageByWidget({
+  Future<void> addMarkerByWidget({
     required String assetName,
     required dynamic feature,
   }) async {
@@ -69,22 +69,22 @@ class LayerState extends State<WidgetAsMarkerExample> {
     await controller.addGeoJsonSource("points", _points);
     Stopwatch stopwatch = Stopwatch()..start();
 
-    for (final feature in (_points['features'] as List)) {
-      controller.addSymbol(
-        SymbolOptions(
-          iconImage: feature["properties"]["assetId"],
-          geometry: LatLng(
-            (feature["geometry"]["coordinates"] as List<double>).first,
-            (feature["geometry"]["coordinates"] as List<double>).last,
-          ),
-        ),
-      );
-    }
+    // for (final feature in (_points['features'] as List)) {
+    //   controller.addSymbol(
+    //     SymbolOptions(
+    //       iconImage: feature["properties"]["assetId"],
+    //       geometry: LatLng(
+    //         (feature["geometry"]["coordinates"] as List<double>).first,
+    //         (feature["geometry"]["coordinates"] as List<double>).last,
+    //       ),
+    //     ),
+    //   );
+    // }
 
     await Future.wait(
       [
         for (final feature in (_points['features'] as List))
-          setImageByWidget(
+          addMarkerByWidget(
             assetName: '${feature['id']}',
             feature: feature,
           ),
