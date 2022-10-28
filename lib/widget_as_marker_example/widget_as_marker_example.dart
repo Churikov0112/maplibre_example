@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
+import 'package:http/http.dart' as http;
 
 import 'custom_marker_widget.dart';
 
@@ -21,14 +22,18 @@ class LayerState extends State<WidgetAsMarkerExample> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: MaplibreMap(
-        dragEnabled: false,
-        onMapCreated: _onMapCreated,
-        onStyleLoadedCallback: _onStyleLoadedCallback,
-        initialCameraPosition: const CameraPosition(
-          target: center,
-          zoom: 11.0,
-        ),
+      body: Stack(
+        children: [
+          MaplibreMap(
+            dragEnabled: false,
+            onMapCreated: _onMapCreated,
+            onStyleLoadedCallback: _onStyleLoadedCallback,
+            initialCameraPosition: const CameraPosition(
+              target: center,
+              zoom: 11.0,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -40,27 +45,52 @@ class LayerState extends State<WidgetAsMarkerExample> {
 
   void onFeatureTap(dynamic featureId, Point<double> point, LatLng latLng) {}
 
-  Future<void> setImageByWidget(
-    String name,
-    Widget widget,
-  ) async {
+  Future<void> setImageByWidget({
+    required String assetName,
+    required dynamic feature,
+  }) async {
+    http.Response response = await http.get(
+      Uri.parse(feature["properties"]["imageURL"]),
+    );
     ScreenshotController screenshotController = ScreenshotController();
-    Uint8List imageBytes = await screenshotController.captureFromWidget(widget, delay: Duration.zero);
-    controller.addImage(name, imageBytes);
+    final thisWidget = CustomMarkerWidget(
+      title: feature["properties"]["title"],
+      description: feature["properties"]["description"],
+      imageBytes: response.bodyBytes,
+    );
+    Uint8List imageBytes = await screenshotController.captureFromWidget(
+      thisWidget,
+      delay: const Duration(milliseconds: 500),
+    );
+    await controller.addImage(assetName, imageBytes);
   }
 
   void _onStyleLoadedCallback() async {
     await controller.addGeoJsonSource("points", _points);
+    Stopwatch stopwatch = Stopwatch()..start();
 
     for (final feature in (_points['features'] as List)) {
-      await setImageByWidget(
-        '${feature['id']}',
-        CustomMarkerWidget(
-          title: feature["properties"]["title"],
-          description: feature["properties"]["description"],
+      controller.addSymbol(
+        SymbolOptions(
+          iconImage: feature["properties"]["assetId"],
+          geometry: LatLng(
+            (feature["geometry"]["coordinates"] as List<double>).first,
+            (feature["geometry"]["coordinates"] as List<double>).last,
+          ),
         ),
       );
     }
+
+    await Future.wait(
+      [
+        for (final feature in (_points['features'] as List))
+          setImageByWidget(
+            assetName: '${feature['id']}',
+            feature: feature,
+          ),
+      ],
+    );
+    print('doSomething() executed in ${stopwatch.elapsed}');
 
     await controller.addSymbolLayer(
       "points",
@@ -75,60 +105,24 @@ class LayerState extends State<WidgetAsMarkerExample> {
   }
 }
 
-const _points = {
+Map<String, dynamic> _points = {
   "type": "FeatureCollection",
   "features": [
-    {
-      "type": "Feature",
-      "id": 2,
-      "properties": {
-        "assetId": "2",
-        "title": "title 2",
-        "description": "description 2",
+    for (var i = 0; i < 50; i++)
+      {
+        "type": "Feature",
+        "id": i,
+        "properties": {
+          "assetId": i.toString(),
+          "title": "title 2",
+          "description": "description 2",
+          "imageURL":
+              "https://purepng.com/public/uploads/large/purepng.com-sitting-mansitting-manmansittingresting-1421526921786ju8nx.png",
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [151.184913929732943 + 0.01 * i, -33.874874486427181 + 0.01 * i]
+        }
       },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [151.184913929732943, -33.874874486427181]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": 3,
-      "properties": {
-        "assetId": "3",
-        "title": "title 3",
-        "description": "description 3",
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [151.215730044667879, -33.874616048776858]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": 4,
-      "properties": {
-        "assetId": "4",
-        "title": "title 4",
-        "description": "description 4",
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [151.228803547973598, -33.892188026142584]
-      }
-    },
-    {
-      "type": "Feature",
-      "id": 5,
-      "properties": {
-        "assetId": "5",
-        "title": "title 5",
-        "description": "description 5",
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [151.186470299174118, -33.902781145804774]
-      }
-    }
   ]
 };
