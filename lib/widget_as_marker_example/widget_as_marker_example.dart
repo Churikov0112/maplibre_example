@@ -168,16 +168,14 @@ class LayerState extends State<WidgetAsMarkerExample> {
     );
   }
 
-  void _onMapCreated(MaplibreMapController controller) {
-    this.controller = controller;
-    controller.onFeatureTapped.add(onFeatureTap);
-    controller.symbolManager?.setIconAllowOverlap(true);
-    controller.symbolManager?.setIconIgnorePlacement(true);
-    controller.symbolManager?.setTextAllowOverlap(true);
-    controller.symbolManager?.setTextIgnorePlacement(true);
+  Future<void> _onMapCreated(MaplibreMapController maplibreMapController) async {
+    controller = maplibreMapController;
+    controller.onSymbolTapped.add(_onSymbolTapped);
+    await controller.setSymbolIconAllowOverlap(true);
+    await controller.setSymbolIconIgnorePlacement(true);
   }
 
-  void onFeatureTap(dynamic featureId, Point<double> point, LatLng latLng) {}
+  void _onSymbolTapped(Symbol symbol) {}
 
   // метод удаяяет с карты маркер по id
   Future<void> deleteMarker({
@@ -186,7 +184,7 @@ class LayerState extends State<WidgetAsMarkerExample> {
     final symbol = symbols[featureId]["symbol"];
 
     if (symbol != null) {
-      await controller.symbolManager?.remove(symbol);
+      await controller.removeSymbol(symbol);
     }
   }
 
