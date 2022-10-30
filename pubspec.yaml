@@ -36,6 +36,7 @@ dependencies:
         ref: main
 
   http: ^0.13.5
+  bot_toast: ^4.0.3
   flutter_plugin_android_lifecycle: ^2.0.7
   screenshot: ^1.2.3
 
@@ -50,6 +51,7 @@ flutter:
 
   assets:
     - assets/raster/markers/
+    - assets/gif/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
