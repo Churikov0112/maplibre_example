@@ -16,7 +16,7 @@ class WidgetAsMarkerExample extends StatefulWidget {
 
 class LayerState extends State<WidgetAsMarkerExample> {
   static const LatLng center = LatLng(-33.86711, 151.1947171);
-
+  ScreenshotController screenshotController = ScreenshotController();
   late MaplibreMapController controller;
 
   Map<String, Symbol> symbols = {};
@@ -42,15 +42,12 @@ class LayerState extends State<WidgetAsMarkerExample> {
         children: [
           FloatingActionButton(
             onPressed: () async {
-              await deleteMarker(featureId: "0");
-
-              (_points["features"] as List).first = {
+              dynamic newFeature = {
                 "type": "Feature",
                 "id": "0",
                 "properties": {
-                  "assetId": "0",
-                  "title": "title 0",
-                  "description": "description 0",
+                  "title": "Планета",
+                  "description": "Земля",
                   "imageURL": "https://www.kindpng.com/picc/m/307-3077167_earth-small-icon-hd-png-download.png",
                 },
                 "geometry": {
@@ -59,7 +56,25 @@ class LayerState extends State<WidgetAsMarkerExample> {
                 }
               };
 
-              await addMarkerByWidget(feature: (_points["features"] as List).first);
+              final loadedImageBytes = await getUint8ListFromImageUrl(
+                url: newFeature["properties"]["imageURL"],
+              );
+
+              final screenshotedWidgetBytes = await getUint8ListFromWidgetWithImageBytes(
+                title: newFeature["properties"]["title"],
+                description: newFeature["properties"]["description"],
+                imageBytes: loadedImageBytes,
+              );
+
+              await deleteMarker(featureId: "0");
+
+              (_points["features"] as List).first = newFeature;
+
+              await addSymbolByWidget(
+                feature: (_points["features"] as List).first,
+                loadedImageBytes: loadedImageBytes,
+                screenshotedWidgetBytes: screenshotedWidgetBytes,
+              );
             },
             child: const Center(
               child: Icon(Icons.update),
@@ -68,20 +83,6 @@ class LayerState extends State<WidgetAsMarkerExample> {
           const SizedBox(height: 10),
           FloatingActionButton(
             onPressed: () async {
-              // (_points["features"] as List).first = {
-              //   "type": "Feature",
-              //   "id": 0,
-              //   "properties": {
-              //     "assetId": "0",
-              //     "title": "title 0",
-              //     "description": "description 0",
-              //     "imageURL": "https://www.kindpng.com/picc/m/307-3077167_earth-small-icon-hd-png-download.png",
-              //   },
-              //   "geometry": {
-              //     "type": "Point",
-              //     "coordinates": [151.184913929732943 + 0.01 * 0, -33.874874486427181 + 0.01 * 0]
-              //   }
-              // };
               await deleteMarker(featureId: "0");
             },
             child: const Center(
@@ -112,58 +113,63 @@ class LayerState extends State<WidgetAsMarkerExample> {
     }
   }
 
-  Future<void> addMarkerByWidget({
-    required dynamic feature,
+  Future<Uint8List> getUint8ListFromImageUrl({
+    required String url,
   }) async {
-    http.Response response = await http.get(
-      Uri.parse(feature["properties"]["imageURL"]),
-    );
-    ScreenshotController screenshotController = ScreenshotController();
+    http.Response response = await http.get(Uri.parse(url));
+    return response.bodyBytes;
+  }
+
+  Future<Uint8List> getUint8ListFromWidgetWithImageBytes({
+    required String title,
+    required String description,
+    required Uint8List imageBytes,
+  }) async {
     final thisWidget = CustomMarkerWidget(
-      title: feature["properties"]["title"],
-      description: feature["properties"]["description"],
-      imageBytes: response.bodyBytes,
+      title: title,
+      description: description,
+      imageBytes: imageBytes,
     );
-    Uint8List imageBytes = await screenshotController.captureFromWidget(
+    Uint8List widgetBytes = await screenshotController.captureFromWidget(
       thisWidget,
       delay: const Duration(milliseconds: 1000),
     );
-    await controller.addImage(feature['id'], imageBytes);
+    return widgetBytes;
+  }
+
+  Future<void> addSymbolByWidget({
+    required dynamic feature,
+    Uint8List? loadedImageBytes,
+    Uint8List? screenshotedWidgetBytes,
+  }) async {
+    final imageBytes = loadedImageBytes ?? await getUint8ListFromImageUrl(url: feature["properties"]["imageURL"]);
+    final widgetBytes = screenshotedWidgetBytes ??
+        await getUint8ListFromWidgetWithImageBytes(
+          title: feature["properties"]["title"],
+          description: feature["properties"]["description"],
+          imageBytes: imageBytes,
+        );
+    await controller.addImage(feature['id'], widgetBytes);
     symbols[feature['id']] = await controller.addSymbol(
       SymbolOptions(
-        iconImage: feature["properties"]["assetId"],
+        iconImage: feature["id"],
         geometry: LatLng(
           (feature["geometry"]["coordinates"] as List<double>).last,
           (feature["geometry"]["coordinates"] as List<double>).first,
         ),
       ),
     );
+    // Stopwatch stopwatch = Stopwatch()..start();
+
+    // print('doSomething() executed in ${stopwatch.elapsed}');
   }
 
   void _onStyleLoadedCallback() async {
-    // await controller.addGeoJsonSource("points", _points);
-    Stopwatch stopwatch = Stopwatch()..start();
-
     await Future.wait(
       [
-        for (final feature in (_points['features'] as List))
-          addMarkerByWidget(
-            feature: feature,
-          ),
+        for (final feature in (_points['features'] as List)) addSymbolByWidget(feature: feature),
       ],
     );
-    print('doSomething() executed in ${stopwatch.elapsed}');
-
-    // await controller.addSymbolLayer(
-    //   "points",
-    //   "symbols",
-    //   const SymbolLayerProperties(
-    //     // iconRotationAlignment: "map",
-    //     iconImage: [Expressions.get, "assetId"],
-    //     iconAllowOverlap: true, // не скрывать маркеры при наложении
-    //     iconAnchor: "bottom-left",
-    //   ),
-    // );
   }
 }
 
@@ -175,7 +181,6 @@ Map<String, dynamic> _points = {
         "type": "Feature",
         "id": i.toString(),
         "properties": {
-          "assetId": i.toString(),
           "title": "title $i",
           "description": "description $i",
           "imageURL": "https://img.lovepik.com/element/40116/9419.png_300.png",
