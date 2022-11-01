@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:maplibre_example/widget_as_marker_example/custom_toast_widget.dart';
+import 'package:maplibre_example/screenshoted_widget_example/custom_toast_widget.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
@@ -11,14 +11,14 @@ import 'package:http/http.dart' as http;
 
 import 'custom_marker_widget.dart';
 
-class WidgetAsMarkerExample extends StatefulWidget {
-  const WidgetAsMarkerExample({Key? key}) : super(key: key);
+class ScreenshotedWidgetExample extends StatefulWidget {
+  const ScreenshotedWidgetExample({Key? key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => LayerState();
+  State<StatefulWidget> createState() => ScreenshotedWidgetExampleState();
 }
 
-class LayerState extends State<WidgetAsMarkerExample> {
+class ScreenshotedWidgetExampleState extends State<ScreenshotedWidgetExample> {
   CameraPosition initialCameraPosition = const CameraPosition(
     target: LatLng(59.974941, 30.337769), // LatLng
     zoom: 13.0,
@@ -43,6 +43,9 @@ class LayerState extends State<WidgetAsMarkerExample> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Screenshoted Widhet as marker"),
+      ),
       body: Stack(
         children: [
           MaplibreMap(
