@@ -57,7 +57,7 @@ class AnimatedMarkerExampleState extends State<AnimatedMarkerExample> {
       _markerStates[markerState.widget.id]?.updatePosition(dynamicPoint);
       _markerStates[markerState.widget.id]?.setCoordinate(dynamicCoordinate);
 
-      setState(() {});
+      // setState(() {});
 
       // _updateMarkerPosition();
     });

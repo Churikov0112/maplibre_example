@@ -1,6 +1,7 @@
 import 'dart:core';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:maplibre_example/fwd_map_example/fwd_map_example.dart';
 import 'animated_marker_example/animated_marker_example.dart';
 import 'screenshoted_widget_example/screenshoted_widget_example.dart';
 
@@ -50,6 +51,17 @@ class MenuPage extends StatelessWidget {
               );
             },
             title: const Text("Flutter Widget as marker"),
+            trailing: const Icon(Icons.chevron_right_outlined),
+          ),
+          ListTile(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (BuildContext context) => FwdMapExample(),
+                ),
+              );
+            },
+            title: const Text("Fwd Map example"),
             trailing: const Icon(Icons.chevron_right_outlined),
           ),
         ],

@@ -11,7 +11,6 @@ class Marker extends StatefulWidget {
   final LatLng _initialCoordinate;
   final void Function(String, MarkerState) _addMarkerState;
   final void Function(Marker, MarkerState) _onMarkerTap;
-
   final int assetNumber;
 
   Marker(
@@ -34,10 +33,22 @@ class Marker extends StatefulWidget {
 
 // with TickerProviderStateMixin
 class MarkerState extends State<Marker> {
-  final _iconSize = 50.0;
-
   Point _position;
   LatLng _coordinate;
+
+  LatLng getCoordinate() {
+    return _coordinate;
+  }
+
+  void updatePosition(Point<num> point) {
+    _position = point;
+    setState(() {});
+  }
+
+  void setCoordinate(LatLng newCoordinate) {
+    _coordinate = newCoordinate;
+    setState(() {});
+  }
 
   MarkerState(
     this._position,
@@ -55,8 +66,8 @@ class MarkerState extends State<Marker> {
     }
 
     return Positioned(
-      left: _position.x / ratio - _iconSize / 2,
-      top: _position.y / ratio - _iconSize / 2,
+      left: _position.x / ratio - 50 / 2,
+      top: _position.y / ratio - 50 / 2,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () {
@@ -71,7 +82,7 @@ class MarkerState extends State<Marker> {
                   : (widget.assetNumber == 1)
                       ? 'assets/gif/dancing_pinguin_2.gif'
                       : 'assets/gif/pinguin_footballer.gif',
-              height: _iconSize,
+              height: 50,
             ),
             Container(
               color: Colors.transparent,
@@ -98,21 +109,5 @@ class MarkerState extends State<Marker> {
         ),
       ),
     );
-  }
-
-  void updatePosition(Point<num> point) {
-    setState(() {
-      _position = point;
-    });
-  }
-
-  LatLng getCoordinate() {
-    return _coordinate;
-  }
-
-  void setCoordinate(LatLng newCoordinate) {
-    setState(() {
-      _coordinate = newCoordinate;
-    });
   }
 }

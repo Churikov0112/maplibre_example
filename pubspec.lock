@@ -93,6 +93,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  fwd_map:
+    dependency: "direct main"
+    description:
+      path: fwd_map
+      relative: true
+    source: path
+    version: "0.0.1"
   http:
     dependency: "direct main"
     description:
@@ -253,6 +260,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.4.12"
+  tuple:
+    dependency: transitive
+    description:
+      name: tuple
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.1"
   typed_data:
     dependency: transitive
     description:
@@ -275,5 +289,5 @@ packages:
     source: hosted
     version: "5.3.1"
 sdks:
-  dart: ">=2.17.0-0 <3.0.0"
+  dart: ">=2.18.2 <3.0.0"
   flutter: ">=2.10.0"

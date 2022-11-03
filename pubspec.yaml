@@ -40,6 +40,9 @@ dependencies:
   flutter_plugin_android_lifecycle: ^2.0.7
   screenshot: ^1.2.3
 
+  fwd_map: 
+    path: "fwd_map"
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
