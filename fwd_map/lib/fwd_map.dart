@@ -3,13 +3,10 @@ library fwd_map;
 import 'dart:math';
 import 'package:flutter/widgets.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
-import 'package:tuple/tuple.dart';
 
 import 'fwd_id/fwd_id.dart';
 import 'fwd_map_controller.dart';
-import 'fwd_marker/abstract/fwd_marker.dart';
-import 'fwd_marker/abstract/fwd_marker_state.dart';
-import 'fwd_marker/dynamic/fwd_dynamic_marker.dart';
+import 'fwd_marker/dynamic/fwd_dynamic_marker_widget.dart';
 
 class FwdMap extends StatefulWidget {
   const FwdMap({
@@ -39,29 +36,24 @@ class FwdMap extends StatefulWidget {
 class _FwdMapState extends State<FwdMap> {
   late FwdMapController fwdMapController;
 
-  Map<FwdId, Tuple2<FwdMarker, FwdMarkerState>> _dynamicMarkers = {};
+  Map<FwdId, FwdDynamicMarkerWidget> _dynamicMarkerWidgets = {};
 
-  void _updateDynamicMarkers(Map<FwdId, Tuple2<FwdMarker, FwdMarkerState>> newDynamicMarkers) async {
-    _dynamicMarkers = newDynamicMarkers;
+  void _updateDynamicMarkers(Map<FwdId, FwdDynamicMarkerWidget> newDynamicMarkerWidgets) async {
+    _dynamicMarkerWidgets = newDynamicMarkerWidgets;
     setState(() {});
   }
 
-  void _updateMarkerPosition() {
-    _dynamicMarkers.forEach((fwdId, tuple) async {
-      final coordinate = tuple.item2.getCoordinate();
-      final newPosition = await fwdMapController.toScreenLocation(coordinate);
-      tuple.item2.updatePosition(newPosition);
-    });
-    setState(() {});
-  }
+  // void _updateMarkerPosition() {
+  //   _dynamicMarkers.forEach((fwdId, tuple) async {
+  //     final coordinate = tuple.item2.getCoordinate();
+  //     final newPosition = await fwdMapController.toScreenLocation(coordinate);
+  //     tuple.item2.updatePosition(newPosition);
+  //   });
+  //   setState(() {});
+  // }
 
   void _onMapCreated(MaplibreMapController maplibreMapController) {
     fwdMapController = FwdMapController(maplibreMapController, _updateDynamicMarkers);
-    maplibreMapController.addListener(() {
-      if (maplibreMapController.isCameraMoving) {
-        _updateMarkerPosition();
-      }
-    });
     widget.onFwdMapCreated(fwdMapController);
   }
 
@@ -78,8 +70,8 @@ class _FwdMapState extends State<FwdMap> {
           onStyleLoadedCallback: widget.onStyleLoadedCallback,
           initialCameraPosition: widget.initialCameraPosition,
         ),
-        if (_dynamicMarkers.isNotEmpty)
-          ..._dynamicMarkers.values.map((tuple) => tuple.item1 as FwdDynamicMarker).toList(),
+        if (_dynamicMarkerWidgets.isNotEmpty)
+          ..._dynamicMarkerWidgets.values.map((dynamicMarkerWidget) => dynamicMarkerWidget).toList(),
       ],
     );
   }
