@@ -38,22 +38,13 @@ class _FwdMapState extends State<FwdMap> {
 
   Map<FwdId, FwdDynamicMarkerWidget> _dynamicMarkerWidgets = {};
 
-  void _updateDynamicMarkers(Map<FwdId, FwdDynamicMarkerWidget> newDynamicMarkerWidgets) async {
+  void _updateDynamicMarkerWidgets(Map<FwdId, FwdDynamicMarkerWidget> newDynamicMarkerWidgets) async {
     _dynamicMarkerWidgets = newDynamicMarkerWidgets;
     setState(() {});
   }
 
-  // void _updateMarkerPosition() {
-  //   _dynamicMarkers.forEach((fwdId, tuple) async {
-  //     final coordinate = tuple.item2.getCoordinate();
-  //     final newPosition = await fwdMapController.toScreenLocation(coordinate);
-  //     tuple.item2.updatePosition(newPosition);
-  //   });
-  //   setState(() {});
-  // }
-
   void _onMapCreated(MaplibreMapController maplibreMapController) {
-    fwdMapController = FwdMapController(maplibreMapController, _updateDynamicMarkers);
+    fwdMapController = FwdMapController(maplibreMapController, _updateDynamicMarkerWidgets);
     widget.onFwdMapCreated(fwdMapController);
   }
 

@@ -13,11 +13,10 @@ class FwdMapController {
   //     {};
 
   Map<FwdId, Tuple2<FwdStaticMarker, Symbol>> staticMarkers = {};
+  // final Function(Map<FwdId, Widget>) _updateStaticMarkerWidgetsCallback;
 
   Map<FwdId, FwdDynamicMarkerWidget> dynamicMarkerWidgets = {};
-
   final Function(Map<FwdId, FwdDynamicMarkerWidget>) _updateDynamicMarkerWidgetsCallback;
-  // final Function(Map<FwdId, Widget>) _updateStaticMarkerWidgetsCallback;
 
   FwdMapController(
     this._maplibreMapController,
@@ -46,12 +45,24 @@ class FwdMapController {
         geometry: fwdStaticMarker.coordinate,
       ),
       {
-        "fwdId": fwdStaticMarker.id,
+        "markerId":
+            fwdStaticMarker.id, // приходится засовывать markerId в Data of Symbol, чтобы хоть как-то его возвращать
       },
     );
 
     staticMarkers[fwdStaticMarker.id] = Tuple2(fwdStaticMarker, symbol);
     // _updateStaticMarkerWidgetsCallback(staticMarkers);
+  }
+
+  Future<void> deleteMarker(FwdId markerId) async {
+    if (staticMarkers.keys.contains(markerId)) {
+      await _maplibreMapController.removeSymbol(staticMarkers[markerId]!.item2);
+      staticMarkers.remove(markerId);
+    }
+    if (dynamicMarkerWidgets.keys.contains(markerId)) {
+      dynamicMarkerWidgets.remove(markerId);
+      _updateDynamicMarkerWidgetsCallback(dynamicMarkerWidgets);
+    }
   }
 
   Future<Point<num>> toScreenLocation(LatLng latLng) async {

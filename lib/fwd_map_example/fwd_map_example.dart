@@ -46,14 +46,13 @@ class FwdMapExample extends StatelessWidget {
                 width: 50,
                 color: Colors.red,
               );
+
               await _fwdMapController.addStaticMarker(
                 await FwdStaticMarker.fromWidget(
                   id: FwdId.fromString(id: _rnd.nextDouble().toString()),
                   coordinate: coordinate,
                   onTap: (symbol) {
-                    print("symbolId: ${symbol.id}");
-                    print("coordinate: ${symbol.options.geometry}");
-                    print("fwdId: ${symbol.data?['fwdId']}");
+                    _fwdMapController.deleteMarker(symbol.data?["markerId"]);
                   },
                   child: widget,
                 ),
@@ -78,10 +77,8 @@ class FwdMapExample extends StatelessWidget {
                 FwdDynamicMarker(
                   id: FwdId.fromString(id: _rnd.nextDouble().toString()),
                   initialCoordinate: coordinate,
-                  onMarkerTap: (fwdId, coordinate, position) {
-                    print("fwdId: $fwdId");
-                    print("coordinate: $coordinate");
-                    print("position: $position");
+                  onMarkerTap: (markerId, coordinate, position) {
+                    _fwdMapController.deleteMarker(markerId);
                   },
                   child: widget,
                 ),
