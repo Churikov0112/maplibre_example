@@ -60,7 +60,10 @@ class FwdMapController {
       staticMarkers.remove(markerId);
     }
     if (dynamicMarkerWidgets.keys.contains(markerId)) {
-      dynamicMarkerWidgets.remove(markerId);
+      // удаляет нужный маркер, но почему-то ставит его на место прдыдущего
+      // с первым скроллом карты все встает на свои места
+      dynamicMarkerWidgets.removeWhere((id, widget) => id == markerId);
+      print(dynamicMarkerWidgets);
       _updateDynamicMarkerWidgetsCallback(dynamicMarkerWidgets);
     }
   }
