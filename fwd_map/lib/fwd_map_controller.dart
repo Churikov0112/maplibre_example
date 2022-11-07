@@ -30,6 +30,7 @@ class FwdMapController {
       maplibreMapController: _maplibreMapController,
       id: fwdDynamicMarker.id,
       initialCoordinate: fwdDynamicMarker.initialCoordinate,
+      onMarkerTap: fwdDynamicMarker.onMarkerTap,
       child: fwdDynamicMarker.child,
     );
     dynamicMarkerWidgets[fwdDynamicMarker.id] = fwdDynamicMarkerWidget;
@@ -37,13 +38,18 @@ class FwdMapController {
   }
 
   Future<void> addStaticMarker(FwdStaticMarker fwdStaticMarker) async {
+    _maplibreMapController.onSymbolTapped.add(fwdStaticMarker.onTap);
     await _maplibreMapController.addImage(fwdStaticMarker.id.toString(), fwdStaticMarker.bytes);
     final symbol = await _maplibreMapController.addSymbol(
       SymbolOptions(
         iconImage: fwdStaticMarker.id.toString(),
         geometry: fwdStaticMarker.coordinate,
       ),
+      {
+        "fwdId": fwdStaticMarker.id,
+      },
     );
+
     staticMarkers[fwdStaticMarker.id] = Tuple2(fwdStaticMarker, symbol);
     // _updateStaticMarkerWidgetsCallback(staticMarkers);
   }

@@ -7,15 +7,17 @@ import '../../fwd_id/fwd_id.dart';
 
 class FwdDynamicMarkerWidget extends StatefulWidget {
   const FwdDynamicMarkerWidget({
+    required this.maplibreMapController,
     required this.id,
     required this.initialCoordinate,
-    required this.maplibreMapController,
+    this.onMarkerTap,
     required this.child,
     super.key,
   });
 
   final FwdId id;
   final MaplibreMapController maplibreMapController;
+  final Function(FwdId, LatLng, Point<num>?)? onMarkerTap;
   final LatLng initialCoordinate;
   final Widget child;
 
@@ -61,7 +63,14 @@ class FwdDynamicMarkerWidgetState extends State<FwdDynamicMarkerWidget> {
     return Positioned(
       left: _position!.x / ratio - 50 / 2,
       top: _position!.y / ratio - 50 / 2,
-      child: widget.child,
+      child: GestureDetector(
+        onTap: () {
+          if (widget.onMarkerTap != null && _position != null) {
+            widget.onMarkerTap!(widget.id, widget.initialCoordinate, _position);
+          }
+        },
+        child: widget.child,
+      ),
     );
   }
 }
