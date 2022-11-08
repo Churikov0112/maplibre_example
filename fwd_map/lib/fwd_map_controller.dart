@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/widgets.dart';
 import 'package:fwd_map/fwd_marker/dynamic/fwd_dynamic_marker.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 import 'package:tuple/tuple.dart';
@@ -30,6 +31,7 @@ class FwdMapController {
       id: fwdDynamicMarker.id,
       initialCoordinate: fwdDynamicMarker.initialCoordinate,
       onMarkerTap: fwdDynamicMarker.onMarkerTap,
+      key: UniqueKey(),
       child: fwdDynamicMarker.child,
     );
     dynamicMarkerWidgets[fwdDynamicMarker.id] = fwdDynamicMarkerWidget;
@@ -67,6 +69,20 @@ class FwdMapController {
       _updateDynamicMarkerWidgetsCallback(dynamicMarkerWidgets);
     }
   }
+
+  // Future<void> moveCamera(LatLng newLatLng) async {
+  //   if (staticMarkers.keys.contains(markerId)) {
+  //     await _maplibreMapController.removeSymbol(staticMarkers[markerId]!.item2);
+  //     staticMarkers.remove(markerId);
+  //   }
+  //   if (dynamicMarkerWidgets.keys.contains(markerId)) {
+  //     // удаляет нужный маркер, но почему-то ставит его на место прдыдущего
+  //     // с первым скроллом карты все встает на свои места
+  //     dynamicMarkerWidgets.removeWhere((id, widget) => id == markerId);
+  //     print(dynamicMarkerWidgets);
+  //     _updateDynamicMarkerWidgetsCallback(dynamicMarkerWidgets);
+  //   }
+  // }
 
   Future<Point<num>> toScreenLocation(LatLng latLng) async {
     return await _maplibreMapController.toScreenLocation(latLng);

@@ -30,22 +30,23 @@ class FwdDynamicMarkerWidgetState extends State<FwdDynamicMarkerWidget> {
 
   Future<void> maplibreMapListener() async {
     if (widget.maplibreMapController.isCameraMoving) {
-      _position = await widget.maplibreMapController.toScreenLocation(widget.initialCoordinate);
+      await calculatePosition();
       setState(() {});
     }
+  }
+
+  Future<void> calculatePosition() async {
+    _position = await widget.maplibreMapController.toScreenLocation(widget.initialCoordinate);
   }
 
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await calculatePosition(widget.initialCoordinate);
+      await calculatePosition();
+      setState(() {});
     });
     widget.maplibreMapController.addListener(maplibreMapListener);
     super.initState();
-  }
-
-  Future<void> calculatePosition(LatLng latLng) async {
-    _position = await widget.maplibreMapController.toScreenLocation(latLng);
   }
 
   @override

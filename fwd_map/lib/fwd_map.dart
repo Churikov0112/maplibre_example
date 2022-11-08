@@ -39,9 +39,7 @@ class _FwdMapState extends State<FwdMap> {
   Map<FwdId, FwdDynamicMarkerWidget> _dynamicMarkerWidgets = {};
 
   void _updateDynamicMarkerWidgets(Map<FwdId, FwdDynamicMarkerWidget> newDynamicMarkerWidgets) async {
-    print(newDynamicMarkerWidgets);
     _dynamicMarkerWidgets = newDynamicMarkerWidgets;
-    print(_dynamicMarkerWidgets);
     setState(() {});
   }
 
