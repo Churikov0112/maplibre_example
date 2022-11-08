@@ -6,7 +6,6 @@ import 'package:maplibre_gl/mapbox_gl.dart';
 
 import 'fwd_id/fwd_id.dart';
 import 'fwd_map_controller.dart';
-import 'fwd_marker/dynamic/fwd_dynamic_marker_widget.dart';
 import 'fwd_marker/fwd_marker_animation_controller/fwd_marker_animation_widget.dart';
 
 class FwdMap extends StatefulWidget {
