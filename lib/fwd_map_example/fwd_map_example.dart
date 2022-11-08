@@ -52,7 +52,16 @@ class FwdMapExample extends StatelessWidget {
                   id: FwdId.fromString(id: _rnd.nextDouble().toString()),
                   coordinate: coordinate,
                   onTap: (symbol) {
-                    _fwdMapController.deleteMarker(symbol.data?["markerId"]);
+                    // _fwdMapController.deleteMarker(symbol.data?["markerId"]);
+
+                    final lat = _rnd.nextDouble() + 59;
+                    final lng = _rnd.nextDouble() + 30;
+                    final coordinate = LatLng(lat, lng);
+                    _fwdMapController.animateMarker(
+                      markerId: symbol.data!["markerId"],
+                      newLatLng: coordinate,
+                      duration: const Duration(seconds: 2),
+                    );
                   },
                   child: widget,
                 ),

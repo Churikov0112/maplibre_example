@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart' show Widget;
 import 'package:maplibre_gl/mapbox_gl.dart';
 
 import '../../fwd_id/fwd_id.dart';
-import '../../fwd_map_helper/fwd_map_helper.dart';
+import '../../fwd_map_helpers/fwd_map_marker_helper.dart';
 
 class FwdStaticMarker {
   final FwdId id;

@@ -7,6 +7,7 @@ import 'package:maplibre_gl/mapbox_gl.dart';
 import 'fwd_id/fwd_id.dart';
 import 'fwd_map_controller.dart';
 import 'fwd_marker/dynamic/fwd_dynamic_marker_widget.dart';
+import 'fwd_marker/static/fwd_static_marker_animation_widget.dart';
 
 class FwdMap extends StatefulWidget {
   const FwdMap({
@@ -37,14 +38,25 @@ class _FwdMapState extends State<FwdMap> {
   late FwdMapController fwdMapController;
 
   Map<FwdId, FwdDynamicMarkerWidget> _dynamicMarkerWidgets = {};
+  Map<FwdId, FwdStaticMarkerAnimationWidget> _staticMarkerAnimationWidgets = {};
 
   void _updateDynamicMarkerWidgets(Map<FwdId, FwdDynamicMarkerWidget> newDynamicMarkerWidgets) async {
     _dynamicMarkerWidgets = newDynamicMarkerWidgets;
     setState(() {});
   }
 
+  void _updateStaticMarkerAnimationWidgets(
+      Map<FwdId, FwdStaticMarkerAnimationWidget> newStaticMarkerAnimationWidgets) async {
+    _staticMarkerAnimationWidgets = newStaticMarkerAnimationWidgets;
+    setState(() {});
+  }
+
   void _onMapCreated(MaplibreMapController maplibreMapController) {
-    fwdMapController = FwdMapController(maplibreMapController, _updateDynamicMarkerWidgets);
+    fwdMapController = FwdMapController(
+      maplibreMapController,
+      _updateDynamicMarkerWidgets,
+      _updateStaticMarkerAnimationWidgets,
+    );
     widget.onFwdMapCreated(fwdMapController);
   }
 
@@ -61,8 +73,8 @@ class _FwdMapState extends State<FwdMap> {
           onStyleLoadedCallback: widget.onStyleLoadedCallback,
           initialCameraPosition: widget.initialCameraPosition,
         ),
-        if (_dynamicMarkerWidgets.isNotEmpty)
-          ..._dynamicMarkerWidgets.values.map((dynamicMarkerWidget) => dynamicMarkerWidget).toList(),
+        if (_dynamicMarkerWidgets.isNotEmpty) ..._dynamicMarkerWidgets.values.toList(),
+        if (_staticMarkerAnimationWidgets.isNotEmpty) ..._staticMarkerAnimationWidgets.values.toList(),
       ],
     );
   }
