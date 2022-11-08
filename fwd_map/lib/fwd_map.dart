@@ -7,7 +7,7 @@ import 'package:maplibre_gl/mapbox_gl.dart';
 import 'fwd_id/fwd_id.dart';
 import 'fwd_map_controller.dart';
 import 'fwd_marker/dynamic/fwd_dynamic_marker_widget.dart';
-import 'fwd_marker/static/fwd_static_marker_animation_widget.dart';
+import 'fwd_marker/fwd_marker_animation_controller/fwd_marker_animation_widget.dart';
 
 class FwdMap extends StatefulWidget {
   const FwdMap({
@@ -37,16 +37,15 @@ class FwdMap extends StatefulWidget {
 class _FwdMapState extends State<FwdMap> {
   late FwdMapController fwdMapController;
 
-  Map<FwdId, FwdDynamicMarkerWidget> _dynamicMarkerWidgets = {};
-  Map<FwdId, FwdStaticMarkerAnimationWidget> _staticMarkerAnimationWidgets = {};
+  Map<FwdId, FwdMarkerAnimationWidget> _dynamicMarkerAnimationWidgets = {};
+  Map<FwdId, FwdMarkerAnimationWidget> _staticMarkerAnimationWidgets = {};
 
-  void _updateDynamicMarkerWidgets(Map<FwdId, FwdDynamicMarkerWidget> newDynamicMarkerWidgets) async {
-    _dynamicMarkerWidgets = newDynamicMarkerWidgets;
+  void _updateDynamicMarkerWidgets(Map<FwdId, FwdMarkerAnimationWidget> newMarkerAnimationWidgets) async {
+    _dynamicMarkerAnimationWidgets = newMarkerAnimationWidgets;
     setState(() {});
   }
 
-  void _updateStaticMarkerAnimationWidgets(
-      Map<FwdId, FwdStaticMarkerAnimationWidget> newStaticMarkerAnimationWidgets) async {
+  void _updateStaticMarkerAnimationWidgets(Map<FwdId, FwdMarkerAnimationWidget> newStaticMarkerAnimationWidgets) async {
     _staticMarkerAnimationWidgets = newStaticMarkerAnimationWidgets;
     setState(() {});
   }
@@ -73,7 +72,7 @@ class _FwdMapState extends State<FwdMap> {
           onStyleLoadedCallback: widget.onStyleLoadedCallback,
           initialCameraPosition: widget.initialCameraPosition,
         ),
-        if (_dynamicMarkerWidgets.isNotEmpty) ..._dynamicMarkerWidgets.values.toList(),
+        if (_dynamicMarkerAnimationWidgets.isNotEmpty) ..._dynamicMarkerAnimationWidgets.values.toList(),
         if (_staticMarkerAnimationWidgets.isNotEmpty) ..._staticMarkerAnimationWidgets.values.toList(),
       ],
     );

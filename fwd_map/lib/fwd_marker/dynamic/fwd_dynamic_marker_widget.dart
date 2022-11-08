@@ -9,7 +9,8 @@ class FwdDynamicMarkerWidget extends StatefulWidget {
   const FwdDynamicMarkerWidget({
     required this.maplibreMapController,
     required this.id,
-    required this.initialCoordinate,
+    required this.coordinate,
+    required this.initialPosition,
     this.onMarkerTap,
     required this.child,
     super.key,
@@ -18,7 +19,9 @@ class FwdDynamicMarkerWidget extends StatefulWidget {
   final FwdId id;
   final MaplibreMapController maplibreMapController;
   final Function(FwdId, LatLng, Point<num>?)? onMarkerTap;
-  final LatLng initialCoordinate;
+  final LatLng coordinate;
+  final Point initialPosition;
+
   final Widget child;
 
   @override
@@ -26,7 +29,7 @@ class FwdDynamicMarkerWidget extends StatefulWidget {
 }
 
 class FwdDynamicMarkerWidgetState extends State<FwdDynamicMarkerWidget> {
-  Point? _position;
+  late Point _position;
 
   Future<void> maplibreMapListener() async {
     if (widget.maplibreMapController.isCameraMoving) {
@@ -36,17 +39,23 @@ class FwdDynamicMarkerWidgetState extends State<FwdDynamicMarkerWidget> {
   }
 
   Future<void> calculatePosition() async {
-    _position = await widget.maplibreMapController.toScreenLocation(widget.initialCoordinate);
+    _position = await widget.maplibreMapController.toScreenLocation(widget.coordinate);
   }
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await calculatePosition();
-      setState(() {});
-    });
+    _position = widget.initialPosition;
     widget.maplibreMapController.addListener(maplibreMapListener);
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant FwdDynamicMarkerWidget oldWidget) {
+    if (oldWidget.coordinate != widget.coordinate) {
+      _position = widget.initialPosition;
+      setState(() {});
+    }
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -57,9 +66,9 @@ class FwdDynamicMarkerWidgetState extends State<FwdDynamicMarkerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_position == null) {
-      return const SizedBox.shrink();
-    }
+    // if (_position == null) {
+    //   return const SizedBox.shrink();
+    // }
 
     var ratio = 1.0;
 
@@ -70,12 +79,12 @@ class FwdDynamicMarkerWidgetState extends State<FwdDynamicMarkerWidget> {
     }
 
     return Positioned(
-      left: _position!.x / ratio - 50 / 2,
-      top: _position!.y / ratio - 50 / 2,
+      left: _position.x / ratio - 50 / 2,
+      top: _position.y / ratio - 50 / 2,
       child: GestureDetector(
         onTap: () {
-          if (widget.onMarkerTap != null && _position != null) {
-            widget.onMarkerTap!(widget.id, widget.initialCoordinate, _position);
+          if (widget.onMarkerTap != null) {
+            widget.onMarkerTap!(widget.id, widget.coordinate, _position);
           }
         },
         child: widget.child,

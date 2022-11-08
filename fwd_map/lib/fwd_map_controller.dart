@@ -4,23 +4,22 @@ import 'package:fwd_map/fwd_marker/dynamic/fwd_dynamic_marker.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 import 'package:tuple/tuple.dart';
 import 'fwd_id/fwd_id.dart';
-import 'fwd_marker/dynamic/fwd_dynamic_marker_widget.dart';
 import 'fwd_marker/static/fwd_static_marker.dart';
-import 'fwd_marker/static/fwd_static_marker_animation_controller/fwd_static_marker_animation_controller.dart';
-import 'fwd_marker/static/fwd_static_marker_animation_widget.dart';
+import 'fwd_marker/fwd_marker_animation_controller/fwd_marker_animation_controller.dart';
+import 'fwd_marker/fwd_marker_animation_controller/fwd_marker_animation_widget.dart';
 
 class FwdMapController {
   final MaplibreMapController _maplibreMapController;
 
-  // Map<FwdId, Tuple4<FwdStaticMarker, Symbol, FwdStaticMarkerAnimationController, FwdStaticMarkerWidget>> staticMarkers =
+  // Map<FwdId, Tuple4<FwdStaticMarker, Symbol, FwdMarkerAnimationController, FwdStaticMarkerWidget>> staticMarkers =
   //     {};
 
-  Map<FwdId, Tuple4<FwdStaticMarker, Symbol, FwdStaticMarkerAnimationController, FwdStaticMarkerAnimationWidget>>
-      staticMarkers = {};
-  final Function(Map<FwdId, FwdStaticMarkerAnimationWidget>) _updateStaticMarkerAnimationWidgetsCallback;
+  Map<FwdId, Tuple4<FwdStaticMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, Symbol>> staticMarkers =
+      {};
+  final Function(Map<FwdId, FwdMarkerAnimationWidget>) _updateStaticMarkerAnimationWidgetsCallback;
 
-  Map<FwdId, FwdDynamicMarkerWidget> dynamicMarkerWidgets = {};
-  final Function(Map<FwdId, FwdDynamicMarkerWidget>) _updateDynamicMarkerWidgetsCallback;
+  Map<FwdId, Tuple3<FwdDynamicMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget>> dynamicMarkers = {};
+  final Function(Map<FwdId, FwdMarkerAnimationWidget>) _updateDynamicMarkerWidgetsCallback;
 
   FwdMapController(
     this._maplibreMapController,
@@ -30,16 +29,25 @@ class FwdMapController {
   );
 
   Future<void> addDynamicMarker(FwdDynamicMarker fwdDynamicMarker) async {
-    final fwdDynamicMarkerWidget = FwdDynamicMarkerWidget(
+    FwdMarkerAnimationController fwdMarkerAnimationController = FwdMarkerAnimationController();
+    Point initialPosistion = await _maplibreMapController.toScreenLocation(fwdDynamicMarker.initialCoordinate);
+    final fwdMarkerAnimationWidget = FwdMarkerAnimationWidget.fromDynamicMarker(
+      fwdDynamicMarker: fwdDynamicMarker,
       maplibreMapController: _maplibreMapController,
-      id: fwdDynamicMarker.id,
-      initialCoordinate: fwdDynamicMarker.initialCoordinate,
-      onMarkerTap: fwdDynamicMarker.onMarkerTap,
+      fwdMarkerAnimationController: fwdMarkerAnimationController,
+      initialMarkerPosition: initialPosistion,
       key: UniqueKey(),
-      child: fwdDynamicMarker.child,
     );
-    dynamicMarkerWidgets[fwdDynamicMarker.id] = fwdDynamicMarkerWidget;
-    _updateDynamicMarkerWidgetsCallback(dynamicMarkerWidgets);
+    dynamicMarkers[fwdDynamicMarker.id] = Tuple3(
+      fwdDynamicMarker,
+      fwdMarkerAnimationController,
+      fwdMarkerAnimationWidget,
+    );
+    final Map<FwdId, FwdMarkerAnimationWidget> dynamicMarkerAnimationWidgetsForCallback = {};
+    dynamicMarkers.forEach((fwdId, tuple4) {
+      dynamicMarkerAnimationWidgetsForCallback[fwdId] = tuple4.item3;
+    });
+    _updateDynamicMarkerWidgetsCallback(dynamicMarkerAnimationWidgetsForCallback);
   }
 
   Future<void> addStaticMarker(FwdStaticMarker fwdStaticMarker) async {
@@ -56,24 +64,25 @@ class FwdMapController {
       },
     );
 
-    FwdStaticMarkerAnimationController fwdStaticMarkerAnimationController = FwdStaticMarkerAnimationController();
-    FwdStaticMarkerAnimationWidget fwdStaticMarkerAnimationWidget = FwdStaticMarkerAnimationWidget(
+    FwdMarkerAnimationController fwdMarkerAnimationController = FwdMarkerAnimationController();
+    FwdMarkerAnimationWidget fwdStaticMarkerAnimationWidget = FwdMarkerAnimationWidget.fromSymbol(
       symbol: symbol,
       maplibreMapController: _maplibreMapController,
-      fwdStaticMarkerAnimationController: fwdStaticMarkerAnimationController,
+      fwdMarkerAnimationController: fwdMarkerAnimationController,
+      key: UniqueKey(),
     );
 
     staticMarkers[fwdStaticMarker.id] = Tuple4(
       fwdStaticMarker,
-      symbol,
-      fwdStaticMarkerAnimationController,
+      fwdMarkerAnimationController,
       fwdStaticMarkerAnimationWidget,
+      symbol,
     );
 
-    final Map<FwdId, FwdStaticMarkerAnimationWidget> animationWidgetsForCallback = {};
+    final Map<FwdId, FwdMarkerAnimationWidget> animationWidgetsForCallback = {};
 
     staticMarkers.forEach((fwdId, tuple4) {
-      animationWidgetsForCallback[fwdId] = tuple4.item4;
+      animationWidgetsForCallback[fwdId] = tuple4.item3;
     });
 
     _updateStaticMarkerAnimationWidgetsCallback(animationWidgetsForCallback);
@@ -81,12 +90,16 @@ class FwdMapController {
 
   Future<void> deleteMarker(FwdId markerId) async {
     if (staticMarkers.keys.contains(markerId)) {
-      await _maplibreMapController.removeSymbol(staticMarkers[markerId]!.item2);
+      await _maplibreMapController.removeSymbol(staticMarkers[markerId]!.item4);
       staticMarkers.remove(markerId);
     }
-    if (dynamicMarkerWidgets.keys.contains(markerId)) {
-      dynamicMarkerWidgets.removeWhere((id, widget) => id == markerId);
-      _updateDynamicMarkerWidgetsCallback(dynamicMarkerWidgets);
+    if (dynamicMarkers.keys.contains(markerId)) {
+      dynamicMarkers.removeWhere((id, widget) => id == markerId);
+      final Map<FwdId, FwdMarkerAnimationWidget> dynamicMarkerAnimationWidgetsForCallback = {};
+      dynamicMarkers.forEach((fwdId, tuple4) {
+        dynamicMarkerAnimationWidgetsForCallback[fwdId] = tuple4.item3;
+      });
+      _updateDynamicMarkerWidgetsCallback(dynamicMarkerAnimationWidgetsForCallback);
     }
   }
 
@@ -96,12 +109,11 @@ class FwdMapController {
     required Duration duration,
   }) async {
     if (staticMarkers.keys.contains(markerId)) {
-      staticMarkers[markerId]?.item3.animate(point: newLatLng, duration: duration);
+      staticMarkers[markerId]?.item2.animate(point: newLatLng, duration: duration);
     }
-    // if (dynamicMarkerWidgets.keys.contains(markerId)) {
-    //   dynamicMarkerWidgets.removeWhere((id, widget) => id == markerId);
-    //   _updateDynamicMarkerWidgetsCallback(dynamicMarkerWidgets);
-    // }
+    if (dynamicMarkers.keys.contains(markerId)) {
+      dynamicMarkers[markerId]?.item2.animate(point: newLatLng, duration: duration);
+    }
   }
 
   Future<Point<num>> toScreenLocation(LatLng latLng) async {

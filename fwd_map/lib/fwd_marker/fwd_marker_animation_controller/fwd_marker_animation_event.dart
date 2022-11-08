@@ -1,27 +1,27 @@
 import 'package:maplibre_gl/mapbox_gl.dart';
 
-class FwdStaticMarkerAnimationEvent {
+class FwdMarkerAnimationEvent {
   final LatLng? point;
   final Duration? duration;
-  final FwdStaticMarkerAnimationAction action;
+  final FwdMarkerAnimationAction action;
 
-  FwdStaticMarkerAnimationEvent.animate({
+  FwdMarkerAnimationEvent.animate({
     this.point,
     this.duration,
-  }) : action = FwdStaticMarkerAnimationAction.animate;
+  }) : action = FwdMarkerAnimationAction.animate;
 
-  // FwdStaticMarkerAnimationEvent.remove()
+  // FwdMarkerAnimationEvent.remove()
   //     : point = null,
   //       duration = null,
   //       action = FwdStaticMarkerAnimationAction.remove;
 
-  // FwdStaticMarkerAnimationEvent.teleport({
+  // FwdMarkerAnimationEvent.teleport({
   //   this.point,
   // })  : duration = null,
   //       action = FwdStaticMarkerAnimationAction.teleport;
 }
 
-enum FwdStaticMarkerAnimationAction {
+enum FwdMarkerAnimationAction {
   animate,
   // remove,
   // teleport,
