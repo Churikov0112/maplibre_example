@@ -41,10 +41,9 @@ class FwdMapExample extends StatelessWidget {
               final lng = _rnd.nextDouble() + 30;
               final coordinate = LatLng(lat, lng);
 
-              final widget = Container(
+              final widget = Image.asset(
+                'assets/gif/dancing_pinguin_2.gif',
                 height: 50,
-                width: 50,
-                color: Colors.red,
               );
 
               await _fwdMapController.addStaticMarker(
@@ -77,10 +76,9 @@ class FwdMapExample extends StatelessWidget {
               final lng = _rnd.nextDouble() + 30;
               final coordinate = LatLng(lat, lng);
 
-              final widget = Container(
+              final widget = Image.asset(
+                'assets/gif/dancing_pinguin_2.gif',
                 height: 50,
-                width: 50,
-                color: Colors.red,
               );
               await _fwdMapController.addDynamicMarker(
                 FwdDynamicMarker(
