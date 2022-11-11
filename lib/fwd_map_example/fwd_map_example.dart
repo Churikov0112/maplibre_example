@@ -116,9 +116,11 @@ class FwdMapExample extends StatelessWidget {
                 geometry.add(coordinate);
               }
 
+              final id = FwdId.fromString(id: _rnd.nextDouble().toString());
+
               await _fwdMapController.addPolyline(
                 FwdPolyline(
-                  id: FwdId.fromString(id: _rnd.nextDouble().toString()),
+                  id: id,
                   geometry: geometry,
                   thickness: 10,
                   color: const Color.fromRGBO(255, 100, 100, 1),
@@ -143,9 +145,11 @@ class FwdMapExample extends StatelessWidget {
               points.add(points.first);
               geometry.first.addAll(points);
 
+              final id = FwdId.fromString(id: _rnd.nextDouble().toString());
+
               await _fwdMapController.addPolygon(
                 FwdPolygon(
-                  id: FwdId.fromString(id: _rnd.nextDouble().toString()),
+                  id: id,
                   geometry: geometry,
                   fillColor: const Color.fromRGBO(255, 100, 100, 0.2),
                   borderColor: const Color.fromRGBO(255, 100, 100, 1),

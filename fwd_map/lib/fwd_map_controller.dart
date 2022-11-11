@@ -106,7 +106,7 @@ class FwdMapController {
       _updateDynamicMarkerWidgetsCallback(dynamicMarkerAnimationWidgetsForCallback);
     }
     if (_polylines.keys.contains(fwdId)) {
-      await _maplibreMapController.removeLine(_polygons[fwdId]!.item2);
+      await _maplibreMapController.removeLine(_polylines[fwdId]!.item2);
       _polylines.remove(fwdId);
     }
     if (_polygons.keys.contains(fwdId)) {
