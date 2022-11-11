@@ -6,6 +6,7 @@ import 'package:fwd_map/fwd_map.dart';
 import 'package:fwd_map/fwd_map_controller.dart';
 import 'package:fwd_map/fwd_marker/dynamic/fwd_dynamic_marker.dart';
 import 'package:fwd_map/fwd_marker/static/fwd_static_marker.dart';
+import 'package:fwd_map/fwd_polygon/fwd_polygon.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
 // ignore: must_be_immutable
@@ -80,6 +81,7 @@ class FwdMapExample extends StatelessWidget {
                 'assets/gif/dancing_pinguin_2.gif',
                 height: 50,
               );
+
               await _fwdMapController.addDynamicMarker(
                 FwdDynamicMarker(
                   id: FwdId.fromString(id: _rnd.nextDouble().toString()),
@@ -100,7 +102,58 @@ class FwdMapExample extends StatelessWidget {
                 ),
               );
             },
-            child: const Icon(Icons.widgets),
+            child: const Icon(Icons.flutter_dash),
+          ),
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            onPressed: () async {
+              final Random _rnd = Random();
+              final List<LatLng> geometry = [];
+              for (var i = 0; i < 6; i++) {
+                final lat = _rnd.nextDouble() + 59;
+                final lng = _rnd.nextDouble() + 30;
+                final coordinate = LatLng(lat, lng);
+                geometry.add(coordinate);
+              }
+
+              await _fwdMapController.addPolyline(
+                FwdPolyline(
+                  id: FwdId.fromString(id: _rnd.nextDouble().toString()),
+                  geometry: geometry,
+                  thickness: 10,
+                  color: const Color.fromRGBO(255, 100, 100, 1),
+                ),
+              );
+            },
+            child: const Icon(Icons.line_axis),
+          ),
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            onPressed: () async {
+              final Random _rnd = Random();
+              final List<LatLng> points = [];
+              final List<List<LatLng>> geometry = [];
+              geometry.add(<LatLng>[]);
+              for (var i = 0; i < 6; i++) {
+                final lat = _rnd.nextDouble() + 59;
+                final lng = _rnd.nextDouble() + 30;
+                final coordinate = LatLng(lat, lng);
+                points.add(coordinate);
+              }
+              points.add(points.first);
+              geometry.first.addAll(points);
+
+              await _fwdMapController.addPolygon(
+                FwdPolygon(
+                  id: FwdId.fromString(id: _rnd.nextDouble().toString()),
+                  geometry: geometry,
+                  fillColor: const Color.fromRGBO(255, 100, 100, 0.2),
+                  borderColor: const Color.fromRGBO(255, 100, 100, 1),
+                  borderThickness: 2,
+                ),
+              );
+            },
+            child: const Icon(Icons.square),
           ),
         ],
       ),

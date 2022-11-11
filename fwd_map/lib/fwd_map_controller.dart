@@ -1,18 +1,17 @@
 import 'dart:math';
 import 'package:flutter/widgets.dart';
-import 'package:fwd_map/fwd_marker/dynamic/fwd_dynamic_marker.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 import 'package:tuple/tuple.dart';
 import 'fwd_id/fwd_id.dart';
-import 'fwd_marker/static/fwd_static_marker.dart';
+import 'fwd_marker/dynamic/fwd_dynamic_marker.dart';
 import 'fwd_marker/fwd_marker_animation_controller/fwd_marker_animation_controller.dart';
+import 'fwd_marker/static/fwd_static_marker.dart';
 import 'fwd_marker/fwd_marker_animation_controller/fwd_marker_animation_widget.dart';
+import 'fwd_polygon/fwd_polygon.dart';
+import 'fwd_polyline/fwd_polyline.dart';
 
 class FwdMapController {
   final MaplibreMapController _maplibreMapController;
-
-  // Map<FwdId, Tuple4<FwdStaticMarker, Symbol, FwdMarkerAnimationController, FwdStaticMarkerWidget>> staticMarkers =
-  //     {};
 
   // ignore: prefer_final_fields
   Map<FwdId, Tuple4<FwdStaticMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, Symbol>> _staticMarkers =
@@ -23,11 +22,16 @@ class FwdMapController {
   Map<FwdId, Tuple3<FwdDynamicMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget>> _dynamicMarkers = {};
   final Function(Map<FwdId, FwdMarkerAnimationWidget>) _updateDynamicMarkerWidgetsCallback;
 
+  // ignore: prefer_final_fields
+  Map<FwdId, Tuple2<FwdPolyline, Line>> _polylines = {};
+
+  // ignore: prefer_final_fields
+  Map<FwdId, Tuple3<FwdPolygon, Line, Fill>> _polygons = {};
+
   FwdMapController(
     this._maplibreMapController,
     this._updateDynamicMarkerWidgetsCallback,
     this._updateStaticMarkerAnimationWidgetsCallback,
-    // this._updateStaticMarkerWidgetsCallback,
   );
 
   Future<void> addDynamicMarker(FwdDynamicMarker fwdDynamicMarker) async {
@@ -90,18 +94,25 @@ class FwdMapController {
     _updateStaticMarkerAnimationWidgetsCallback(animationWidgetsForCallback);
   }
 
-  Future<void> deleteMarker(FwdId markerId) async {
-    if (_staticMarkers.keys.contains(markerId)) {
-      await _maplibreMapController.removeSymbol(_staticMarkers[markerId]!.item4);
-      _staticMarkers.remove(markerId);
+  Future<void> deleteById(FwdId fwdId) async {
+    if (_staticMarkers.keys.contains(fwdId)) {
+      await _maplibreMapController.removeSymbol(_staticMarkers[fwdId]!.item4);
+      _staticMarkers.remove(fwdId);
     }
-    if (_dynamicMarkers.keys.contains(markerId)) {
-      _dynamicMarkers.removeWhere((id, widget) => id == markerId);
+    if (_dynamicMarkers.keys.contains(fwdId)) {
+      _dynamicMarkers.removeWhere((id, widget) => id == fwdId);
       final Map<FwdId, FwdMarkerAnimationWidget> dynamicMarkerAnimationWidgetsForCallback = {};
-      _dynamicMarkers.forEach((fwdId, tuple4) {
-        dynamicMarkerAnimationWidgetsForCallback[fwdId] = tuple4.item3;
-      });
+      _dynamicMarkers.forEach((id, tuple4) => dynamicMarkerAnimationWidgetsForCallback[id] = tuple4.item3);
       _updateDynamicMarkerWidgetsCallback(dynamicMarkerAnimationWidgetsForCallback);
+    }
+    if (_polylines.keys.contains(fwdId)) {
+      await _maplibreMapController.removeLine(_polygons[fwdId]!.item2);
+      _polylines.remove(fwdId);
+    }
+    if (_polygons.keys.contains(fwdId)) {
+      await _maplibreMapController.removeLine(_polygons[fwdId]!.item2);
+      await _maplibreMapController.removeFill(_polygons[fwdId]!.item3);
+      _polygons.remove(fwdId);
     }
   }
 
@@ -116,6 +127,47 @@ class FwdMapController {
     if (_dynamicMarkers.keys.contains(markerId)) {
       _dynamicMarkers[markerId]?.item2.animate(point: newLatLng, duration: duration);
     }
+  }
+
+  Future<void> addPolyline(FwdPolyline fwdPolyline) async {
+    final line = await _maplibreMapController.addLine(
+      LineOptions(
+        geometry: fwdPolyline.geometry,
+        lineWidth: fwdPolyline.thickness,
+        lineColor: fwdPolyline.color?.toHexStringRGB(),
+        lineOpacity: fwdPolyline.color?.opacity,
+      ),
+      {
+        "polylineId": fwdPolyline.id,
+      },
+    );
+    _polylines[fwdPolyline.id] = Tuple2(fwdPolyline, line);
+  }
+
+  Future<void> addPolygon(FwdPolygon fwdPolygon) async {
+    print(fwdPolygon.fillColor != null ? '#${fwdPolygon.fillColor!.value.toRadixString(16)}' : null);
+    final line = await _maplibreMapController.addLine(
+      LineOptions(
+        geometry: fwdPolygon.geometry.first,
+        lineWidth: fwdPolygon.borderThickness,
+        lineColor: fwdPolygon.borderColor?.toHexStringRGB(),
+        lineOpacity: fwdPolygon.borderColor?.opacity,
+      ),
+      {
+        "polygonId": fwdPolygon.id,
+      },
+    );
+    final fill = await _maplibreMapController.addFill(
+      FillOptions(
+        fillColor: fwdPolygon.fillColor?.toHexStringRGB(),
+        fillOpacity: fwdPolygon.fillColor?.opacity,
+        geometry: fwdPolygon.geometry,
+      ),
+      {
+        "polygonId": fwdPolygon.id,
+      },
+    );
+    _polygons[fwdPolygon.id] = Tuple3(fwdPolygon, line, fill);
   }
 
   Future<Point<num>> toScreenLocation(LatLng latLng) async {

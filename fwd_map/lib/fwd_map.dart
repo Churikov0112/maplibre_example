@@ -1,12 +1,16 @@
 library fwd_map;
 
-import 'dart:math';
-import 'package:flutter/widgets.dart';
-import 'package:maplibre_gl/mapbox_gl.dart';
+import 'dart:math' show Point;
+import 'package:flutter/widgets.dart' show StatefulWidget, State, BuildContext, Widget, Stack;
+import 'package:maplibre_gl/mapbox_gl.dart' show MaplibreMap, MaplibreMapController, CameraPosition, LatLng;
+import 'fwd_id/fwd_id.dart' show FwdId;
+import 'fwd_map_controller.dart' show FwdMapController;
+import 'fwd_marker/fwd_marker_animation_controller/fwd_marker_animation_widget.dart' show FwdMarkerAnimationWidget;
 
-import 'fwd_id/fwd_id.dart';
-import 'fwd_map_controller.dart';
-import 'fwd_marker/fwd_marker_animation_controller/fwd_marker_animation_widget.dart';
+export 'fwd_polygon/fwd_polygon.dart' hide FwdPolygon;
+export 'fwd_polyline/fwd_polyline.dart' show FwdPolyline;
+export 'fwd_marker/dynamic/fwd_dynamic_marker.dart' show FwdDynamicMarker;
+export 'fwd_marker/static/fwd_static_marker.dart' show FwdStaticMarker;
 
 class FwdMap extends StatefulWidget {
   const FwdMap({
