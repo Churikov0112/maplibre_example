@@ -14,12 +14,13 @@ class FwdMapController {
   final MaplibreMapController _maplibreMapController;
 
   // ignore: prefer_final_fields
-  Map<FwdId, Tuple4<FwdStaticMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, Symbol>> _staticMarkers =
-      {};
+  Map<FwdId, Tuple5<FwdStaticMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, Symbol, LatLng>>
+      _staticMarkers = {};
   final Function(Map<FwdId, FwdMarkerAnimationWidget>) _updateStaticMarkerAnimationWidgetsCallback;
 
   // ignore: prefer_final_fields
-  Map<FwdId, Tuple3<FwdDynamicMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget>> _dynamicMarkers = {};
+  Map<FwdId, Tuple4<FwdDynamicMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, LatLng>> _dynamicMarkers =
+      {};
   final Function(Map<FwdId, FwdMarkerAnimationWidget>) _updateDynamicMarkerWidgetsCallback;
 
   // ignore: prefer_final_fields
@@ -27,6 +28,26 @@ class FwdMapController {
 
   // ignore: prefer_final_fields
   Map<FwdId, Tuple3<FwdPolygon, Line, Fill>> _polygons = {};
+
+  FwdStaticMarker? getFwdStaticMarkerById(FwdId id) {
+    if (_staticMarkers.keys.contains(id)) return _staticMarkers[id]!.item1;
+    return null;
+  }
+
+  FwdDynamicMarker? getFwdDynamicMarkerById(FwdId id) {
+    if (_dynamicMarkers.keys.contains(id)) return _dynamicMarkers[id]!.item1;
+    return null;
+  }
+
+  FwdPolygon? getFwdPolygonById(FwdId id) {
+    if (_polygons.keys.contains(id)) return _polygons[id]!.item1;
+    return null;
+  }
+
+  FwdPolyline? getFwdPolylineById(FwdId id) {
+    if (_polylines.keys.contains(id)) return _polylines[id]!.item1;
+    return null;
+  }
 
   FwdMapController(
     this._maplibreMapController,
@@ -44,11 +65,64 @@ class FwdMapController {
       initialMarkerPosition: initialPosistion,
       key: UniqueKey(),
     );
-    _dynamicMarkers[fwdDynamicMarker.id] = Tuple3(
+    _dynamicMarkers[fwdDynamicMarker.id] = Tuple4(
       fwdDynamicMarker,
       fwdMarkerAnimationController,
       fwdMarkerAnimationWidget,
+      fwdDynamicMarker.initialCoordinate,
     );
+    final Map<FwdId, FwdMarkerAnimationWidget> dynamicMarkerAnimationWidgetsForCallback = {};
+    _dynamicMarkers.forEach((fwdId, tuple4) {
+      dynamicMarkerAnimationWidgetsForCallback[fwdId] = tuple4.item3;
+    });
+    _updateDynamicMarkerWidgetsCallback(dynamicMarkerAnimationWidgetsForCallback);
+  }
+
+  Future<void> updateDynamicMarker({
+    required FwdId markerId,
+    LatLng? newCoordinate,
+    Function(FwdId, LatLng, Point<num>?)? newOnMarkerTap,
+    Widget? newChild,
+  }) async {
+    FwdDynamicMarker? newFwdDynamicMarker;
+    Point? newInitialMarkerPosition;
+
+    final oldDynamicMarker = _dynamicMarkers[markerId];
+
+    if (newCoordinate != null) {
+      await animateMarker(
+        markerId: markerId,
+        newLatLng: newCoordinate,
+        duration: const Duration(seconds: 0),
+      );
+      newInitialMarkerPosition = await toScreenLocation(newCoordinate);
+    }
+
+    if (newChild != null) {
+      newFwdDynamicMarker = FwdDynamicMarker(
+        id: markerId,
+        initialCoordinate: _dynamicMarkers[markerId]!.item4,
+        onMarkerTap: newOnMarkerTap,
+        child: newChild,
+      );
+    }
+
+    final fwdMarkerAnimationWidget = FwdMarkerAnimationWidget.fromDynamicMarker(
+      fwdDynamicMarker: newFwdDynamicMarker ?? oldDynamicMarker!.item1,
+      maplibreMapController: _maplibreMapController,
+      fwdMarkerAnimationController: oldDynamicMarker!.item2,
+      initialMarkerPosition: newInitialMarkerPosition ?? oldDynamicMarker.item3.initialMarkerPosition,
+      key: oldDynamicMarker.item3.key,
+    );
+
+    _dynamicMarkers[markerId] = Tuple4(
+      newFwdDynamicMarker ?? oldDynamicMarker.item1,
+      oldDynamicMarker.item2,
+      fwdMarkerAnimationWidget,
+      newCoordinate ?? oldDynamicMarker.item4,
+    );
+    //
+    // ниже - коллбэк
     final Map<FwdId, FwdMarkerAnimationWidget> dynamicMarkerAnimationWidgetsForCallback = {};
     _dynamicMarkers.forEach((fwdId, tuple4) {
       dynamicMarkerAnimationWidgetsForCallback[fwdId] = tuple4.item3;
@@ -78,11 +152,12 @@ class FwdMapController {
       key: UniqueKey(),
     );
 
-    _staticMarkers[fwdStaticMarker.id] = Tuple4(
+    _staticMarkers[fwdStaticMarker.id] = Tuple5(
       fwdStaticMarker,
       fwdMarkerAnimationController,
       fwdStaticMarkerAnimationWidget,
       symbol,
+      fwdStaticMarker.coordinate,
     );
 
     final Map<FwdId, FwdMarkerAnimationWidget> animationWidgetsForCallback = {};
@@ -122,9 +197,26 @@ class FwdMapController {
     required Duration duration,
   }) async {
     if (_staticMarkers.keys.contains(markerId)) {
+      // Обновляем маркер, чтобы хранить последнюю координату маркера в мапе
+      final staticMarkerNewLatLng = Tuple5(
+        _staticMarkers[markerId]!.item1,
+        _staticMarkers[markerId]!.item2,
+        _staticMarkers[markerId]!.item3,
+        _staticMarkers[markerId]!.item4,
+        newLatLng,
+      );
+      _staticMarkers[markerId] = staticMarkerNewLatLng;
       _staticMarkers[markerId]?.item2.animate(point: newLatLng, duration: duration);
     }
     if (_dynamicMarkers.keys.contains(markerId)) {
+      // Обновляем маркер, чтобы хранить последнюю координату маркера в мапе
+      final dynamicMarkerNewLatLng = Tuple4(
+        _dynamicMarkers[markerId]!.item1,
+        _dynamicMarkers[markerId]!.item2,
+        _dynamicMarkers[markerId]!.item3,
+        newLatLng,
+      );
+      _dynamicMarkers[markerId] = dynamicMarkerNewLatLng;
       _dynamicMarkers[markerId]?.item2.animate(point: newLatLng, duration: duration);
     }
   }
@@ -145,7 +237,6 @@ class FwdMapController {
   }
 
   Future<void> addPolygon(FwdPolygon fwdPolygon) async {
-    print(fwdPolygon.fillColor != null ? '#${fwdPolygon.fillColor!.value.toRadixString(16)}' : null);
     final line = await _maplibreMapController.addLine(
       LineOptions(
         geometry: fwdPolygon.geometry.first,

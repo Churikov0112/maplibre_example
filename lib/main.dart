@@ -1,9 +1,10 @@
 import 'dart:core';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:maplibre_example/fwd_map_example/fwd_map_example.dart';
-import 'animated_marker_example/animated_marker_example.dart';
-import 'screenshoted_widget_example/screenshoted_widget_example.dart';
+import 'package:maplibre_example/fwd_map_example/static_marker_example.dart';
+import 'fwd_map_example/dynamic_marker_example.dart';
+import 'fwd_map_example/polygon_example.dart';
+import 'fwd_map_example/polyline_example.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,34 +36,45 @@ class MenuPage extends StatelessWidget {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (BuildContext context) => const ScreenshotedWidgetExample(),
+                  builder: (BuildContext context) => FwdMapStaticMarkerExample(),
                 ),
               );
             },
-            title: const Text("Screenshoted Widget as marker"),
-            trailing: const Icon(Icons.chevron_right_outlined),
+            title: const Text("Static marker"),
+            trailing: const Icon(Icons.security),
           ),
           ListTile(
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (BuildContext context) => const AnimatedMarkerExample(),
+                  builder: (BuildContext context) => FwdMapDynamicMarkerExample(),
                 ),
               );
             },
-            title: const Text("Flutter Widget as marker"),
-            trailing: const Icon(Icons.chevron_right_outlined),
+            title: const Text("Dynamic marker"),
+            trailing: const Icon(Icons.now_widgets),
           ),
           ListTile(
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (BuildContext context) => FwdMapExample(),
+                  builder: (BuildContext context) => FwdMapPolylineExample(),
                 ),
               );
             },
-            title: const Text("Fwd Map example"),
-            trailing: const Icon(Icons.chevron_right_outlined),
+            title: const Text("Polyline example"),
+            trailing: const Icon(Icons.line_axis),
+          ),
+          ListTile(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (BuildContext context) => FwdMapPolygonExample(),
+                ),
+              );
+            },
+            title: const Text("Polygon example"),
+            trailing: const Icon(Icons.square),
           ),
         ],
       ),
