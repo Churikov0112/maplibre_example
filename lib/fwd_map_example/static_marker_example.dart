@@ -12,6 +12,8 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
 
   late FwdMapController _fwdMapController;
 
+  List<FwdId> staticMarkers = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,14 +41,17 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
               final lng = _rnd.nextDouble() + 30;
               final coordinate = LatLng(lat, lng);
 
-              final widget = Image.asset(
-                'assets/gif/dancing_pinguin_2.gif',
+              final widget = Container(
+                width: 50,
                 height: 50,
+                color: Colors.red,
               );
+
+              final id = FwdId.fromString(id: _rnd.nextDouble().toString());
 
               await _fwdMapController.addStaticMarker(
                 await FwdStaticMarker.fromWidget(
-                  id: FwdId.fromString(id: _rnd.nextDouble().toString()),
+                  id: id,
                   coordinate: coordinate,
                   onTap: (symbol) {
                     final lat = _rnd.nextDouble() + 59;
@@ -61,8 +66,46 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
                   child: widget,
                 ),
               );
+
+              staticMarkers.add(id);
             },
-            child: const Icon(Icons.security),
+            child: const Icon(Icons.add),
+          ),
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            onPressed: () async {
+              final coordinate = LatLng(Random().nextDouble() + 59, Random().nextDouble() + 30);
+
+              // final widget = Container(
+              //   width: 50,
+              //   height: 50,
+              //   color: Colors.red,
+              // );
+
+              await _fwdMapController.updateStaticMarker(
+                markerId: staticMarkers.last,
+                newCoordinate: coordinate,
+              );
+
+              // addStaticMarker(
+              //   await FwdStaticMarker.fromWidget(
+              //     id: FwdId.fromString(id: _rnd.nextDouble().toString()),
+              //     coordinate: coordinate,
+              //     onTap: (symbol) {
+              //       final lat = _rnd.nextDouble() + 59;
+              //       final lng = _rnd.nextDouble() + 30;
+              //       final coordinate = LatLng(lat, lng);
+              //       _fwdMapController.animateMarker(
+              //         markerId: symbol.data?['markerId'],
+              //         newLatLng: coordinate,
+              //         duration: const Duration(seconds: 2),
+              //       );
+              //     },
+              //     child: widget,
+              //   ),
+              // );
+            },
+            child: const Icon(Icons.refresh),
           ),
         ],
       ),

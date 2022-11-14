@@ -84,50 +84,156 @@ class FwdMapController {
     Function(FwdId, LatLng, Point<num>?)? newOnMarkerTap,
     Widget? newChild,
   }) async {
-    FwdDynamicMarker? newFwdDynamicMarker;
-    Point? newInitialMarkerPosition;
+    Tuple4<FwdDynamicMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, LatLng>? oldDynamicMarker;
 
-    final oldDynamicMarker = _dynamicMarkers[markerId];
-
-    if (newCoordinate != null) {
-      await animateMarker(
-        markerId: markerId,
-        newLatLng: newCoordinate,
-        duration: const Duration(seconds: 0),
-      );
-      newInitialMarkerPosition = await toScreenLocation(newCoordinate);
+    if (_dynamicMarkers.keys.contains(markerId)) {
+      oldDynamicMarker = _dynamicMarkers[markerId];
     }
 
-    if (newChild != null) {
-      newFwdDynamicMarker = FwdDynamicMarker(
-        id: markerId,
-        initialCoordinate: _dynamicMarkers[markerId]!.item4,
-        onMarkerTap: newOnMarkerTap,
-        child: newChild,
+    if (oldDynamicMarker != null) {
+      FwdDynamicMarker? newFwdDynamicMarker;
+      Point? newInitialMarkerPosition;
+
+      if (newCoordinate != null) {
+        await animateMarker(
+          markerId: markerId,
+          newLatLng: newCoordinate,
+          duration: const Duration(seconds: 0),
+        );
+        newInitialMarkerPosition = await toScreenLocation(newCoordinate);
+      }
+
+      if (newChild != null || newOnMarkerTap != null) {
+        newFwdDynamicMarker = FwdDynamicMarker(
+          id: markerId,
+          initialCoordinate: newCoordinate ?? oldDynamicMarker.item4,
+          onMarkerTap: newOnMarkerTap ?? oldDynamicMarker.item1.onMarkerTap,
+          child: newChild ?? oldDynamicMarker.item1.child,
+        );
+      }
+
+      final fwdMarkerAnimationWidget = FwdMarkerAnimationWidget.fromDynamicMarker(
+        fwdDynamicMarker: newFwdDynamicMarker ?? oldDynamicMarker.item1,
+        maplibreMapController: _maplibreMapController,
+        fwdMarkerAnimationController: oldDynamicMarker.item2,
+        initialMarkerPosition: newInitialMarkerPosition ?? oldDynamicMarker.item3.initialMarkerPosition,
+        key: oldDynamicMarker.item3.key,
       );
+
+      _dynamicMarkers[markerId] = Tuple4(
+        newFwdDynamicMarker ?? oldDynamicMarker.item1,
+        oldDynamicMarker.item2,
+        fwdMarkerAnimationWidget,
+        newCoordinate ?? oldDynamicMarker.item4,
+      );
+      //
+      //  коллбэк
+      final Map<FwdId, FwdMarkerAnimationWidget> dynamicMarkerAnimationWidgetsForCallback = {};
+      _dynamicMarkers.forEach((fwdId, tuple4) {
+        dynamicMarkerAnimationWidgetsForCallback[fwdId] = tuple4.item3;
+      });
+      _updateDynamicMarkerWidgetsCallback(dynamicMarkerAnimationWidgetsForCallback);
+    }
+  }
+
+  /// УКАЗЫВАЙТЕ ЛИБО newWidgetChild, ЛИБО newImageAssetPath, ЛИБО newImageNetworkUrl
+  ///
+  /// НИ В КОЕМ СЛУЧАЕ НЕ ВСЁ ВМЕСТЕ
+  Future<void> updateStaticMarker({
+    required FwdId markerId,
+    LatLng? newCoordinate,
+    Function(Symbol)? newOnMarkerTap,
+    Widget? newWidgetChild,
+    String? newImageAssetPath,
+    // String? newImageAssetPackageName,
+    String? newImageNetworkUrl,
+  }) async {
+    // assert((newWidgetChild != null && newImageAssetPath == null && newImageNetworkUrl == null) ||
+    //     (newWidgetChild == null && newImageAssetPath != null && newImageNetworkUrl == null) ||
+    //     (newWidgetChild == null && newImageAssetPath == null && newImageNetworkUrl != null));
+
+    Tuple5<FwdStaticMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, Symbol, LatLng>? oldStaticMarker;
+
+    if (_staticMarkers.keys.contains(markerId)) {
+      oldStaticMarker = _staticMarkers[markerId];
     }
 
-    final fwdMarkerAnimationWidget = FwdMarkerAnimationWidget.fromDynamicMarker(
-      fwdDynamicMarker: newFwdDynamicMarker ?? oldDynamicMarker!.item1,
-      maplibreMapController: _maplibreMapController,
-      fwdMarkerAnimationController: oldDynamicMarker!.item2,
-      initialMarkerPosition: newInitialMarkerPosition ?? oldDynamicMarker.item3.initialMarkerPosition,
-      key: oldDynamicMarker.item3.key,
-    );
+    if (oldStaticMarker != null) {
+      FwdStaticMarker? newFwdStaticMarker;
 
-    _dynamicMarkers[markerId] = Tuple4(
-      newFwdDynamicMarker ?? oldDynamicMarker.item1,
-      oldDynamicMarker.item2,
-      fwdMarkerAnimationWidget,
-      newCoordinate ?? oldDynamicMarker.item4,
-    );
-    //
-    // ниже - коллбэк
-    final Map<FwdId, FwdMarkerAnimationWidget> dynamicMarkerAnimationWidgetsForCallback = {};
-    _dynamicMarkers.forEach((fwdId, tuple4) {
-      dynamicMarkerAnimationWidgetsForCallback[fwdId] = tuple4.item3;
-    });
-    _updateDynamicMarkerWidgetsCallback(dynamicMarkerAnimationWidgetsForCallback);
+      if (newCoordinate != null) {
+        await animateMarker(
+          markerId: markerId,
+          newLatLng: newCoordinate,
+          duration: const Duration(seconds: 0),
+        );
+      }
+
+      if (newWidgetChild != null) {
+        newFwdStaticMarker = await FwdStaticMarker.fromWidget(
+          id: markerId,
+          coordinate: newCoordinate ?? oldStaticMarker.item5,
+          onTap: newOnMarkerTap ?? oldStaticMarker.item1.onTap,
+          child: newWidgetChild,
+        );
+      }
+      if (newImageAssetPath != null) {
+        newFwdStaticMarker = await FwdStaticMarker.fromImageAsset(
+          id: markerId,
+          coordinate: newCoordinate ?? oldStaticMarker.item5,
+          onTap: newOnMarkerTap ?? oldStaticMarker.item1.onTap,
+          imageAssetPath: newImageAssetPath,
+        );
+      }
+      if (newImageNetworkUrl != null) {
+        newFwdStaticMarker = await FwdStaticMarker.fromImageNetwork(
+          id: markerId,
+          coordinate: newCoordinate ?? oldStaticMarker.item5,
+          onTap: newOnMarkerTap ?? oldStaticMarker.item1.onTap,
+          imageUrl: newImageNetworkUrl,
+        );
+      }
+
+      if (newFwdStaticMarker != null) {
+        _maplibreMapController.onSymbolTapped.add(newFwdStaticMarker.onTap);
+        await _maplibreMapController.addImage(newFwdStaticMarker.id.toString(), newFwdStaticMarker.bytes);
+
+        await _maplibreMapController.updateSymbol(
+          oldStaticMarker.item4,
+          SymbolOptions(
+            iconImage: newFwdStaticMarker.id.toString(),
+            geometry: newFwdStaticMarker.coordinate,
+          ),
+        );
+
+        final symbol = _maplibreMapController.symbolManager?.byId(oldStaticMarker.item4.id);
+
+        if (symbol != null) {
+          FwdMarkerAnimationWidget fwdStaticMarkerAnimationWidget = FwdMarkerAnimationWidget.fromSymbol(
+            symbol: symbol,
+            maplibreMapController: _maplibreMapController,
+            fwdMarkerAnimationController: oldStaticMarker.item2,
+            key: oldStaticMarker.item3.key,
+          );
+
+          _staticMarkers[markerId] = Tuple5(
+            newFwdStaticMarker,
+            oldStaticMarker.item2,
+            fwdStaticMarkerAnimationWidget,
+            symbol,
+            oldStaticMarker.item5,
+          );
+
+          final Map<FwdId, FwdMarkerAnimationWidget> animationWidgetsForCallback = {};
+
+          _staticMarkers.forEach((fwdId, tuple4) {
+            animationWidgetsForCallback[fwdId] = tuple4.item3;
+          });
+
+          _updateStaticMarkerAnimationWidgetsCallback(animationWidgetsForCallback);
+        }
+      }
+    }
   }
 
   Future<void> addStaticMarker(FwdStaticMarker fwdStaticMarker) async {
