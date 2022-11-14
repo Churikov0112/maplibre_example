@@ -76,15 +76,16 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
             onPressed: () async {
               final coordinate = LatLng(Random().nextDouble() + 59, Random().nextDouble() + 30);
 
-              // final widget = Container(
-              //   width: 50,
-              //   height: 50,
-              //   color: Colors.red,
-              // );
+              final widget = Container(
+                width: 50,
+                height: 50,
+                color: Colors.green,
+              );
 
               await _fwdMapController.updateStaticMarker(
                 markerId: staticMarkers.last,
                 newCoordinate: coordinate,
+                newWidgetChild: widget,
               );
 
               // addStaticMarker(
