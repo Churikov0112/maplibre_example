@@ -1,6 +1,16 @@
+import 'package:maplibre_gl/mapbox_gl.dart';
+
 import '../fwd_id/fwd_id.dart';
 
 class FwdGeoJsonHelper {
+  static String getImageId(FwdId markerId) => "${markerId}_image";
+
+  static String getGeoJsonSourceId(FwdId markerId) => "${markerId}_geoJsonSource";
+
+  static String getSymbolLayerId(FwdId markerId) => "${markerId}_symbolLayer";
+
+  static String getFeatureId(FwdId markerId) => "${markerId}_feature";
+
   static Map<String, dynamic> pointToGeoJson({
     required FwdId staticMarkerId,
     required double bearing,
@@ -12,7 +22,7 @@ class FwdGeoJsonHelper {
       "features": [
         {
           "type": "Feature",
-          "id": "${staticMarkerId.toString()}_feature",
+          "id": getFeatureId(staticMarkerId),
           "properties": {
             "bearing": bearing,
             "markerId": staticMarkerId.toString(),
@@ -27,11 +37,14 @@ class FwdGeoJsonHelper {
     return geoJson;
   }
 
-  static String getImageId(FwdId markerId) => "${markerId}_image";
+  static double getPointBearing(Map<String, dynamic> geoJson) =>
+      (geoJson["features"] as List).first["properties"]["bearing"];
 
-  static String getGeoJsonSourceId(FwdId markerId) => "${markerId}_geoJsonSource";
+  static String getPointMarkerId(Map<String, dynamic> geoJson) =>
+      (geoJson["features"] as List).first["properties"]["markerId"].toString();
 
-  static String getSymbolLayerId(FwdId markerId) => "${markerId}_symbolLayer";
-
-  static String geFeatureId(FwdId markerId) => "${markerId}_feature";
+  static LatLng getPointLatLng(Map<String, dynamic> geoJson) => LatLng(
+        ((geoJson["features"] as List).first["geometry"]["coordinates"] as List).last,
+        ((geoJson["features"] as List).first["geometry"]["coordinates"] as List).first,
+      );
 }

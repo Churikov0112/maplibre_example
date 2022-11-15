@@ -104,12 +104,7 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
     super.initState();
 
     if (widget.type == FwdMarkerAnimationWidgetType.static) {
-      if ((widget.geoJson["features"] as List).first["geometry"] != null) {
-        _currentCoordinate = LatLng(
-          ((widget.geoJson["features"] as List).first["geometry"]["coordinates"] as List).last, // lng
-          ((widget.geoJson["features"] as List).first["geometry"]["coordinates"] as List).first, // lat
-        );
-      }
+      _currentCoordinate = FwdGeoJsonHelper.getPointLatLng(widget.geoJson);
     }
 
     if (widget.type == FwdMarkerAnimationWidgetType.dynamic) {
@@ -130,14 +125,12 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
         _currentCoordinate = latLng;
 
         if (widget.type == FwdMarkerAnimationWidgetType.static) {
-          final markerId = FwdId.fromString(
-            (widget.geoJson["features"] as List).first["properties"]["markerId"],
-          );
+          final markerId = FwdId.fromString(FwdGeoJsonHelper.getPointMarkerId(widget.geoJson));
           widget.maplibreMapController.setGeoJsonSource(
             FwdGeoJsonHelper.getGeoJsonSourceId(markerId),
             FwdGeoJsonHelper.pointToGeoJson(
               staticMarkerId: markerId,
-              bearing: (widget.geoJson["features"] as List).first["properties"]["bearing"],
+              bearing: FwdGeoJsonHelper.getPointBearing(widget.geoJson),
               latitude: _currentCoordinate.latitude,
               longitude: _currentCoordinate.longitude,
             ),

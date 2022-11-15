@@ -154,7 +154,7 @@ class FwdMapController {
         );
         newGeoJson = FwdGeoJsonHelper.pointToGeoJson(
           staticMarkerId: markerId,
-          bearing: (oldGeoJson["features"] as List).first["properties"]["bearing"],
+          bearing: FwdGeoJsonHelper.getPointBearing(oldGeoJson),
           latitude: newCoordinate.latitude,
           longitude: newCoordinate.longitude,
         );
