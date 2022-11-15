@@ -17,15 +17,9 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
   Future<FwdStaticMarker> generateRandomFwdStaticMarkerWidgetChild(Random random) async {
     final id = FwdId.fromString(id: random.nextDouble().toString());
     final fwdStaticMarker = await FwdStaticMarker.fromWidget(
-      id: FwdId.fromString(id: random.nextDouble().toString()),
+      id: id,
       coordinate: LatLng(random.nextDouble() + 59, random.nextDouble() + 30),
-      onTap: (symbol) {
-        _fwdMapController.animateMarker(
-          markerId: symbol.data?['markerId'],
-          newLatLng: LatLng(random.nextDouble() + 59, random.nextDouble() + 30),
-          duration: const Duration(seconds: 2),
-        );
-      },
+      onTap: (symbol) {},
       rotate: false,
       bearing: 45,
       child: Container(
@@ -90,13 +84,28 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
           const SizedBox(width: 10),
           FloatingActionButton(
             onPressed: () async {
+              final _rnd = Random();
+
+              _fwdMapController.animateMarker(
+                markerId: staticMarkers.last,
+                newLatLng: LatLng(_rnd.nextDouble() + 59, _rnd.nextDouble() + 30),
+                duration: const Duration(seconds: 2),
+              );
+            },
+            child: const Icon(Icons.animation),
+          ),
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            onPressed: () async {
               final coordinate = LatLng(Random().nextDouble() + 59, Random().nextDouble() + 30);
 
               final widget = Container(
                 width: 50,
                 height: 50,
-                color: Colors.green,
+                color: Color.fromRGBO(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255), 1),
               );
+
+              print(staticMarkers.last);
 
               await _fwdMapController.updateStaticMarker(
                 markerId: staticMarkers.last,
@@ -105,6 +114,14 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
               );
             },
             child: const Icon(Icons.refresh),
+          ),
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            onPressed: () async {
+              await _fwdMapController.deleteById(staticMarkers.last);
+              staticMarkers.remove(staticMarkers.last);
+            },
+            child: const Icon(Icons.delete),
           ),
         ],
       ),

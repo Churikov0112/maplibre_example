@@ -14,7 +14,8 @@ import 'fwd_polyline/fwd_polyline.dart';
 class FwdMapController {
   final MaplibreMapController _maplibreMapController;
 
-  Map<FwdId, Tuple5<FwdStaticMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, Symbol, LatLng>>
+  Map<FwdId,
+          Tuple5<FwdStaticMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, Map<String, dynamic>, LatLng>>
       // ignore: prefer_final_fields
       _staticMarkers = {};
   final Function(Map<FwdId, FwdMarkerAnimationWidget>) _updateStaticMarkerAnimationWidgetsCallback;
@@ -55,6 +56,207 @@ class FwdMapController {
     this._updateDynamicMarkerWidgetsCallback,
     this._updateStaticMarkerAnimationWidgetsCallback,
   );
+
+  Future<void> addStaticMarker(FwdStaticMarker fwdStaticMarker) async {
+    await _maplibreMapController.addImage(
+      "${fwdStaticMarker.id.toString()}_image",
+      fwdStaticMarker.bytes,
+    );
+
+    final Map<String, dynamic> geoJson = {
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "id": "${fwdStaticMarker.id.toString()}_feature",
+          "properties": {
+            "markerId": fwdStaticMarker.id.toString(),
+            "bearing": fwdStaticMarker.bearing,
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [fwdStaticMarker.coordinate.longitude, fwdStaticMarker.coordinate.latitude],
+          }
+        },
+      ]
+    };
+
+    await _maplibreMapController.addGeoJsonSource("${fwdStaticMarker.id.toString()}_geoJsonSource", geoJson);
+
+    await _maplibreMapController.addSymbolLayer(
+      "${fwdStaticMarker.id.toString()}_geoJsonSource",
+      "${fwdStaticMarker.id.toString()}_symbolLayer",
+      SymbolLayerProperties(
+        iconRotationAlignment: fwdStaticMarker.rotate ? "auto" : "map",
+        iconImage: "${fwdStaticMarker.id.toString()}_image",
+        iconAllowOverlap: true,
+        iconRotate: fwdStaticMarker.bearing,
+      ),
+    );
+
+    FwdMarkerAnimationController fwdMarkerAnimationController = FwdMarkerAnimationController();
+
+    FwdMarkerAnimationWidget fwdStaticMarkerAnimationWidget = FwdMarkerAnimationWidget.fromGeoJson(
+      geoJson: geoJson,
+      maplibreMapController: _maplibreMapController,
+      fwdMarkerAnimationController: fwdMarkerAnimationController,
+      rotate: fwdStaticMarker.rotate,
+      initialBearing: fwdStaticMarker.bearing,
+      key: UniqueKey(),
+    );
+
+    _staticMarkers[fwdStaticMarker.id] = Tuple5(
+      fwdStaticMarker,
+      fwdMarkerAnimationController,
+      fwdStaticMarkerAnimationWidget,
+      geoJson,
+      fwdStaticMarker.coordinate,
+    );
+
+    print(fwdStaticMarker.id);
+
+    // ниже - коллбэк
+
+    final Map<FwdId, FwdMarkerAnimationWidget> animationWidgetsForCallback = {};
+
+    _staticMarkers.forEach((fwdId, tuple4) {
+      animationWidgetsForCallback[fwdId] = tuple4.item3;
+    });
+
+    _updateStaticMarkerAnimationWidgetsCallback(animationWidgetsForCallback);
+  }
+
+  /// УКАЗЫВАЙТЕ ЛИБО newWidgetChild, ЛИБО newImageAssetPath, ЛИБО newImageNetworkUrl
+  ///
+  /// НИ В КОЕМ СЛУЧАЕ НЕ ВСЁ ВМЕСТЕ
+  Future<void> updateStaticMarker({
+    required FwdId markerId,
+    LatLng? newCoordinate,
+    double? newBearing,
+    Widget? newWidgetChild,
+    String? newImageAssetPath,
+    String? newImageNetworkUrl,
+  }) async {
+    // assert((newWidgetChild != null && newImageAssetPath == null && newImageNetworkUrl == null) ||
+    //     (newWidgetChild == null && newImageAssetPath != null && newImageNetworkUrl == null) ||
+    //     (newWidgetChild == null && newImageAssetPath == null && newImageNetworkUrl != null));
+
+    Tuple5<FwdStaticMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, Map<String, dynamic>, LatLng>?
+        oldStaticMarker;
+
+    print(_staticMarkers.keys);
+    print(markerId);
+
+    if (_staticMarkers.keys.contains(markerId)) {
+      oldStaticMarker = _staticMarkers[markerId];
+    }
+
+    if (oldStaticMarker != null) {
+      FwdStaticMarker? newFwdStaticMarker;
+
+      Map<String, dynamic> oldGeoJson = oldStaticMarker.item4;
+
+      Map<String, dynamic> newGeoJson = oldGeoJson;
+
+      if (newCoordinate != null) {
+        await animateMarker(
+          markerId: markerId,
+          newLatLng: newCoordinate,
+          duration: const Duration(seconds: 0),
+        );
+        newGeoJson = {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "id": "${markerId.toString()}_feature",
+              "properties": {
+                "bearing": (oldGeoJson["features"] as List).first["properties"]["bearing"],
+                "markerId": markerId.toString(),
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [newCoordinate.longitude, newCoordinate.latitude],
+              }
+            },
+          ]
+        };
+        await _maplibreMapController.setGeoJsonSource(
+          "${markerId.toString()}_geoJsonSource",
+          newGeoJson,
+        );
+      }
+
+      if (newBearing != null) {
+        (newGeoJson["features"] as List).first["properties"]["bearing"] = newBearing;
+        await _maplibreMapController.setGeoJsonSource(
+          "${markerId.toString()}_geoJsonSource",
+          newGeoJson,
+        );
+      }
+      if (newWidgetChild != null) {
+        newFwdStaticMarker = await FwdStaticMarker.fromWidget(
+          id: markerId,
+          coordinate: newCoordinate ?? oldStaticMarker.item5,
+          onTap: oldStaticMarker.item1.onTap,
+          child: newWidgetChild,
+        );
+      }
+      if (newImageAssetPath != null) {
+        newFwdStaticMarker = await FwdStaticMarker.fromImageAsset(
+          id: markerId,
+          coordinate: newCoordinate ?? oldStaticMarker.item5,
+          onTap: oldStaticMarker.item1.onTap,
+          imageAssetPath: newImageAssetPath,
+        );
+      }
+      if (newImageNetworkUrl != null) {
+        newFwdStaticMarker = await FwdStaticMarker.fromImageNetwork(
+          id: markerId,
+          coordinate: newCoordinate ?? oldStaticMarker.item5,
+          onTap: oldStaticMarker.item1.onTap,
+          imageUrl: newImageNetworkUrl,
+        );
+      }
+
+      if (newFwdStaticMarker != null) {
+        // _maplibreMapController.onSymbolTapped.add(newFwdStaticMarker.onTap);
+        await _maplibreMapController.addImage(
+          "${markerId.toString()}_image",
+          newFwdStaticMarker.bytes,
+        );
+
+        await _maplibreMapController.setGeoJsonSource(
+          "${markerId.toString()}_geoJsonSource",
+          newGeoJson,
+        );
+
+        FwdMarkerAnimationWidget fwdStaticMarkerAnimationWidget = FwdMarkerAnimationWidget.fromGeoJson(
+          geoJson: newGeoJson,
+          maplibreMapController: _maplibreMapController,
+          fwdMarkerAnimationController: oldStaticMarker.item2,
+          rotate: newFwdStaticMarker.rotate,
+          initialBearing: newBearing ?? oldStaticMarker.item1.bearing,
+          key: oldStaticMarker.item3.key,
+        );
+
+        _staticMarkers[markerId] = Tuple5(
+          newFwdStaticMarker,
+          oldStaticMarker.item2,
+          fwdStaticMarkerAnimationWidget,
+          newGeoJson,
+          oldStaticMarker.item5,
+        );
+        final Map<FwdId, FwdMarkerAnimationWidget> animationWidgetsForCallback = {};
+
+        _staticMarkers.forEach((fwdId, tuple4) {
+          animationWidgetsForCallback[fwdId] = tuple4.item3;
+        });
+
+        _updateStaticMarkerAnimationWidgetsCallback(animationWidgetsForCallback);
+      }
+    }
+  }
 
   Future<void> addDynamicMarker(FwdDynamicMarker fwdDynamicMarker) async {
     FwdMarkerAnimationController fwdMarkerAnimationController = FwdMarkerAnimationController();
@@ -141,169 +343,30 @@ class FwdMapController {
     }
   }
 
-  /// УКАЗЫВАЙТЕ ЛИБО newWidgetChild, ЛИБО newImageAssetPath, ЛИБО newImageNetworkUrl
-  ///
-  /// НИ В КОЕМ СЛУЧАЕ НЕ ВСЁ ВМЕСТЕ
-  Future<void> updateStaticMarker({
-    required FwdId markerId,
-    LatLng? newCoordinate,
-    double? newBearing,
-    Function(Symbol)? newOnMarkerTap,
-    Widget? newWidgetChild,
-    String? newImageAssetPath,
-    String? newImageNetworkUrl,
-  }) async {
-    // assert((newWidgetChild != null && newImageAssetPath == null && newImageNetworkUrl == null) ||
-    //     (newWidgetChild == null && newImageAssetPath != null && newImageNetworkUrl == null) ||
-    //     (newWidgetChild == null && newImageAssetPath == null && newImageNetworkUrl != null));
-
-    Tuple5<FwdStaticMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, Symbol, LatLng>? oldStaticMarker;
-
+  Future<void> deleteById(FwdId markerId) async {
     if (_staticMarkers.keys.contains(markerId)) {
-      oldStaticMarker = _staticMarkers[markerId];
+      print("need remove");
+      await _maplibreMapController.removeLayer("${markerId.toString()}_symbolLayer");
+      await _maplibreMapController.removeSource("${markerId.toString()}_geoJsonSource");
+      _staticMarkers.remove(markerId);
     }
 
-    if (oldStaticMarker != null) {
-      FwdStaticMarker? newFwdStaticMarker;
-
-      if (newCoordinate != null) {
-        await animateMarker(
-          markerId: markerId,
-          newLatLng: newCoordinate,
-          duration: const Duration(seconds: 0),
-        );
-      }
-
-      if (newWidgetChild != null) {
-        newFwdStaticMarker = await FwdStaticMarker.fromWidget(
-          id: markerId,
-          coordinate: newCoordinate ?? oldStaticMarker.item5,
-          onTap: newOnMarkerTap ?? oldStaticMarker.item1.onTap,
-          child: newWidgetChild,
-        );
-      }
-      if (newImageAssetPath != null) {
-        newFwdStaticMarker = await FwdStaticMarker.fromImageAsset(
-          id: markerId,
-          coordinate: newCoordinate ?? oldStaticMarker.item5,
-          onTap: newOnMarkerTap ?? oldStaticMarker.item1.onTap,
-          imageAssetPath: newImageAssetPath,
-        );
-      }
-      if (newImageNetworkUrl != null) {
-        newFwdStaticMarker = await FwdStaticMarker.fromImageNetwork(
-          id: markerId,
-          coordinate: newCoordinate ?? oldStaticMarker.item5,
-          onTap: newOnMarkerTap ?? oldStaticMarker.item1.onTap,
-          imageUrl: newImageNetworkUrl,
-        );
-      }
-
-      if (newFwdStaticMarker != null) {
-        _maplibreMapController.onSymbolTapped.add(newFwdStaticMarker.onTap);
-        await _maplibreMapController.addImage(newFwdStaticMarker.id.toString(), newFwdStaticMarker.bytes);
-
-        await _maplibreMapController.updateSymbol(
-          oldStaticMarker.item4,
-          SymbolOptions(
-            iconImage: newFwdStaticMarker.id.toString(),
-            geometry: newFwdStaticMarker.coordinate,
-          ),
-        );
-
-        final symbol = _maplibreMapController.symbolManager?.byId(oldStaticMarker.item4.id);
-
-        if (symbol != null) {
-          FwdMarkerAnimationWidget fwdStaticMarkerAnimationWidget = FwdMarkerAnimationWidget.fromSymbol(
-            symbol: symbol,
-            maplibreMapController: _maplibreMapController,
-            fwdMarkerAnimationController: oldStaticMarker.item2,
-            rotate: newFwdStaticMarker.rotate,
-            initialBearing: newBearing ?? oldStaticMarker.item1.bearing,
-            key: oldStaticMarker.item3.key,
-          );
-
-          _staticMarkers[markerId] = Tuple5(
-            newFwdStaticMarker,
-            oldStaticMarker.item2,
-            fwdStaticMarkerAnimationWidget,
-            symbol,
-            oldStaticMarker.item5,
-          );
-
-          final Map<FwdId, FwdMarkerAnimationWidget> animationWidgetsForCallback = {};
-
-          _staticMarkers.forEach((fwdId, tuple4) {
-            animationWidgetsForCallback[fwdId] = tuple4.item3;
-          });
-
-          _updateStaticMarkerAnimationWidgetsCallback(animationWidgetsForCallback);
-        }
-      }
-    }
-  }
-
-  Future<void> addStaticMarker(FwdStaticMarker fwdStaticMarker) async {
-    _maplibreMapController.onSymbolTapped.add(fwdStaticMarker.onTap);
-    await _maplibreMapController.addImage(fwdStaticMarker.id.toString(), fwdStaticMarker.bytes);
-    final symbol = await _maplibreMapController.addSymbol(
-      SymbolOptions(
-        iconRotate: _maplibreMapController.cameraPosition!.bearing,
-        iconImage: fwdStaticMarker.id.toString(),
-        geometry: fwdStaticMarker.coordinate,
-      ),
-      {
-        "markerId":
-            fwdStaticMarker.id, // приходится засовывать markerId в Data of Symbol, чтобы хоть как-то его возвращать
-      },
-    );
-
-    FwdMarkerAnimationController fwdMarkerAnimationController = FwdMarkerAnimationController();
-    FwdMarkerAnimationWidget fwdStaticMarkerAnimationWidget = FwdMarkerAnimationWidget.fromSymbol(
-      symbol: symbol,
-      maplibreMapController: _maplibreMapController,
-      fwdMarkerAnimationController: fwdMarkerAnimationController,
-      rotate: fwdStaticMarker.rotate,
-      initialBearing: fwdStaticMarker.bearing,
-      key: UniqueKey(),
-    );
-
-    _staticMarkers[fwdStaticMarker.id] = Tuple5(
-      fwdStaticMarker,
-      fwdMarkerAnimationController,
-      fwdStaticMarkerAnimationWidget,
-      symbol,
-      fwdStaticMarker.coordinate,
-    );
-
-    final Map<FwdId, FwdMarkerAnimationWidget> animationWidgetsForCallback = {};
-
-    _staticMarkers.forEach((fwdId, tuple4) {
-      animationWidgetsForCallback[fwdId] = tuple4.item3;
-    });
-
-    _updateStaticMarkerAnimationWidgetsCallback(animationWidgetsForCallback);
-  }
-
-  Future<void> deleteById(FwdId fwdId) async {
-    if (_staticMarkers.keys.contains(fwdId)) {
-      await _maplibreMapController.removeSymbol(_staticMarkers[fwdId]!.item4);
-      _staticMarkers.remove(fwdId);
-    }
-    if (_dynamicMarkers.keys.contains(fwdId)) {
-      _dynamicMarkers.removeWhere((id, widget) => id == fwdId);
+    if (_dynamicMarkers.keys.contains(markerId)) {
+      _dynamicMarkers.removeWhere((id, widget) => id == markerId);
       final Map<FwdId, FwdMarkerAnimationWidget> dynamicMarkerAnimationWidgetsForCallback = {};
       _dynamicMarkers.forEach((id, tuple4) => dynamicMarkerAnimationWidgetsForCallback[id] = tuple4.item3);
       _updateDynamicMarkerWidgetsCallback(dynamicMarkerAnimationWidgetsForCallback);
     }
-    if (_polylines.keys.contains(fwdId)) {
-      await _maplibreMapController.removeLine(_polylines[fwdId]!.item2);
-      _polylines.remove(fwdId);
+
+    if (_polylines.keys.contains(markerId)) {
+      await _maplibreMapController.removeLine(_polylines[markerId]!.item2);
+      _polylines.remove(markerId);
     }
-    if (_polygons.keys.contains(fwdId)) {
-      await _maplibreMapController.removeLine(_polygons[fwdId]!.item2);
-      await _maplibreMapController.removeFill(_polygons[fwdId]!.item3);
-      _polygons.remove(fwdId);
+
+    if (_polygons.keys.contains(markerId)) {
+      await _maplibreMapController.removeLine(_polygons[markerId]!.item2);
+      await _maplibreMapController.removeFill(_polygons[markerId]!.item3);
+      _polygons.remove(markerId);
     }
   }
 
@@ -313,14 +376,32 @@ class FwdMapController {
     required Duration duration,
   }) async {
     if (_staticMarkers.keys.contains(markerId)) {
+      print("need animate");
       // Обновляем маркер, чтобы хранить последнюю координату маркера в мапе
       final staticMarkerNewLatLng = Tuple5(
         _staticMarkers[markerId]!.item1,
         _staticMarkers[markerId]!.item2,
         _staticMarkers[markerId]!.item3,
-        _staticMarkers[markerId]!.item4,
+        {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "id": "${markerId.toString()}_feature",
+              "properties": {
+                "bearing": _staticMarkers[markerId]!.item1.bearing,
+                "markerId": markerId.toString(),
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [newLatLng.longitude, newLatLng.latitude],
+              }
+            },
+          ]
+        },
         newLatLng,
       );
+
       _staticMarkers[markerId] = staticMarkerNewLatLng;
       _staticMarkers[markerId]?.item2.animate(point: newLatLng, duration: duration);
     }

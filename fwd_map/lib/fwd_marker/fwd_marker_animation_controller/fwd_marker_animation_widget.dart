@@ -13,7 +13,7 @@ import 'fwd_marker_animation_state.dart';
 enum FwdMarkerAnimationWidgetType { static, dynamic }
 
 class FwdMarkerAnimationWidget extends StatefulWidget {
-  final Symbol? symbol;
+  final dynamic geoJson;
   final FwdDynamicMarker? fwdDynamicMarker;
   final MaplibreMapController maplibreMapController;
   final FwdMarkerAnimationController fwdMarkerAnimationController;
@@ -22,8 +22,8 @@ class FwdMarkerAnimationWidget extends StatefulWidget {
   final double initialBearing;
   final Point? initialMarkerPosition;
 
-  const FwdMarkerAnimationWidget.fromSymbol({
-    required this.symbol,
+  const FwdMarkerAnimationWidget.fromGeoJson({
+    required this.geoJson,
     required this.maplibreMapController,
     required this.fwdMarkerAnimationController,
     required this.rotate,
@@ -42,7 +42,7 @@ class FwdMarkerAnimationWidget extends StatefulWidget {
     required this.initialBearing,
     super.key,
   })  : type = FwdMarkerAnimationWidgetType.dynamic,
-        symbol = null;
+        geoJson = null;
 
   @override
   State<FwdMarkerAnimationWidget> createState() => _FwdMarkerAnimationWidgetState();
@@ -99,38 +99,17 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
     _dynamicMarkerCurrentPosition = await widget.maplibreMapController.toScreenLocation(_currentCoordinate);
   }
 
-  Future<void> _staticMarkerBearingListener() async {
-    // if (widget.maplibreMapController.cameraPosition?.bearing != _bearing && widget.symbol != null) {
-    //   if (widget.maplibreMapController.cameraPosition?.bearing != null) {
-    //     _bearing = widget.initialBearing + widget.maplibreMapController.cameraPosition!.bearing;
-    //     if (widget.type == FwdMarkerAnimationWidgetType.static) {
-    //       widget.maplibreMapController.updateSymbol(
-    //         widget.symbol!,
-    //         SymbolOptions(iconRotate: 90.0 - _bearing),
-    //       );
-    //     }
-
-    //     // setState(() {});
-    //   }
-    // }
-    if (widget.maplibreMapController.cameraPosition?.bearing != _bearing) {
-      await widget.maplibreMapController.updateSymbol(
-        widget.symbol!,
-        SymbolOptions(iconRotate: 90.0 - _bearing),
-      );
-    }
-
-    // print("bearing");
-  }
-
   @override
   void initState() {
     super.initState();
 
     if (widget.type == FwdMarkerAnimationWidgetType.static) {
       _bearing = widget.initialBearing;
-      if (widget.symbol!.options.geometry != null) {
-        _currentCoordinate = widget.symbol!.options.geometry!;
+      if ((widget.geoJson["features"] as List).first["geometry"] != null) {
+        _currentCoordinate = LatLng(
+          ((widget.geoJson["features"] as List).first["geometry"]["coordinates"] as List).last, // lng
+          ((widget.geoJson["features"] as List).first["geometry"]["coordinates"] as List).first, // lat
+        );
       }
     }
 
@@ -144,10 +123,6 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
 
     _updateState(FwdMarkerAnimationState.init);
 
-    if (!widget.rotate && widget.type == FwdMarkerAnimationWidgetType.static) {
-      widget.maplibreMapController.addListener(_staticMarkerBearingListener);
-    }
-
     _animationController = AnimationController(duration: const Duration(seconds: 5), vsync: this)
       ..addListener(() async {
         // обновляем значения текущий координаты каждый раз, когда запускается анимация
@@ -155,16 +130,43 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
 
         _currentCoordinate = latLng;
 
+        print((widget.geoJson["features"] as List).first["geometry"]["coordinates"]);
+        // print("${(widget.geoJson["features"] as List).first["properties"]["markerId"]}_geoJsonSource");
+
         if (widget.type == FwdMarkerAnimationWidgetType.static) {
-          widget.maplibreMapController
-              .updateSymbol(widget.symbol!, SymbolOptions(geometry: LatLng(latLng.latitude, latLng.longitude)));
+          widget.maplibreMapController.setGeoJsonSource(
+            "${(widget.geoJson["features"] as List).first["properties"]["markerId"]}_geoJsonSource",
+            {
+              "type": "FeatureCollection",
+              "features": [
+                {
+                  "type": "Feature",
+                  "id": "${(widget.geoJson["features"] as List).first["properties"]["markerId"]}_feature",
+                  "properties": {
+                    "bearing": (widget.geoJson["features"] as List).first["properties"]["bearing"],
+                    "markerId": (widget.geoJson["features"] as List).first["properties"]["markerId"].toString(),
+                  },
+                  "geometry": {
+                    "type": "Point",
+                    "coordinates": [_currentCoordinate.longitude, _currentCoordinate.latitude],
+                  }
+                },
+              ]
+            },
+          );
         }
+
+        print("2");
 
         if (widget.type == FwdMarkerAnimationWidgetType.dynamic) {
           _dynamicMarkerCurrentPosition = await widget.maplibreMapController.toScreenLocation(_currentCoordinate);
         }
 
+        print("3");
+
         setState(() {});
+
+        print("4");
       });
 
     // Устанавливаем линейную анимацию
@@ -178,7 +180,6 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
   @override
   void dispose() {
     _animationController.dispose();
-    widget.maplibreMapController.removeListener(_staticMarkerBearingListener);
     widget.fwdMarkerAnimationController.streamController.close();
     super.dispose();
   }
