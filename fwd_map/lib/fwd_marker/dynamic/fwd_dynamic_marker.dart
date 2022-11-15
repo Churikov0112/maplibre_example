@@ -9,6 +9,8 @@ class FwdDynamicMarker {
     required this.id,
     required this.initialCoordinate,
     this.onMarkerTap,
+    this.rotate = true,
+    this.bearing = 0.0,
     required this.child,
   });
 
@@ -16,4 +18,6 @@ class FwdDynamicMarker {
   final LatLng initialCoordinate;
   final Function(FwdId, LatLng, Point<num>?)? onMarkerTap;
   final Widget child;
+  final bool rotate;
+  final double bearing;
 }

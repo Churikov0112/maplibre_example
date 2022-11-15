@@ -64,6 +64,8 @@ class FwdMapController {
       maplibreMapController: _maplibreMapController,
       fwdMarkerAnimationController: fwdMarkerAnimationController,
       initialMarkerPosition: initialPosistion,
+      rotate: fwdDynamicMarker.rotate,
+      initialBearing: fwdDynamicMarker.bearing,
       key: UniqueKey(),
     );
     _dynamicMarkers[fwdDynamicMarker.id] = Tuple4(
@@ -118,6 +120,8 @@ class FwdMapController {
         maplibreMapController: _maplibreMapController,
         fwdMarkerAnimationController: oldDynamicMarker.item2,
         initialMarkerPosition: newInitialMarkerPosition ?? oldDynamicMarker.item3.initialMarkerPosition,
+        rotate: newFwdDynamicMarker?.rotate ?? oldDynamicMarker.item1.rotate,
+        initialBearing: newFwdDynamicMarker?.bearing ?? oldDynamicMarker.item1.bearing,
         key: oldDynamicMarker.item3.key,
       );
 
@@ -143,10 +147,10 @@ class FwdMapController {
   Future<void> updateStaticMarker({
     required FwdId markerId,
     LatLng? newCoordinate,
+    double? newBearing,
     Function(Symbol)? newOnMarkerTap,
     Widget? newWidgetChild,
     String? newImageAssetPath,
-    // String? newImageAssetPackageName,
     String? newImageNetworkUrl,
   }) async {
     // assert((newWidgetChild != null && newImageAssetPath == null && newImageNetworkUrl == null) ||
@@ -214,6 +218,8 @@ class FwdMapController {
             symbol: symbol,
             maplibreMapController: _maplibreMapController,
             fwdMarkerAnimationController: oldStaticMarker.item2,
+            rotate: newFwdStaticMarker.rotate,
+            initialBearing: newBearing ?? oldStaticMarker.item1.bearing,
             key: oldStaticMarker.item3.key,
           );
 
@@ -242,6 +248,7 @@ class FwdMapController {
     await _maplibreMapController.addImage(fwdStaticMarker.id.toString(), fwdStaticMarker.bytes);
     final symbol = await _maplibreMapController.addSymbol(
       SymbolOptions(
+        iconRotate: _maplibreMapController.cameraPosition!.bearing,
         iconImage: fwdStaticMarker.id.toString(),
         geometry: fwdStaticMarker.coordinate,
       ),
@@ -256,6 +263,8 @@ class FwdMapController {
       symbol: symbol,
       maplibreMapController: _maplibreMapController,
       fwdMarkerAnimationController: fwdMarkerAnimationController,
+      rotate: fwdStaticMarker.rotate,
+      initialBearing: fwdStaticMarker.bearing,
       key: UniqueKey(),
     );
 

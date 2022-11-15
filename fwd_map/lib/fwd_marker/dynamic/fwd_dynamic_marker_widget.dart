@@ -11,6 +11,7 @@ class FwdDynamicMarkerWidget extends StatefulWidget {
     required this.id,
     required this.coordinate,
     required this.initialPosition,
+    required this.initialBearing,
     this.onMarkerTap,
     required this.child,
     super.key,
@@ -21,7 +22,7 @@ class FwdDynamicMarkerWidget extends StatefulWidget {
   final Function(FwdId, LatLng, Point<num>?)? onMarkerTap;
   final LatLng coordinate;
   final Point initialPosition;
-
+  final double initialBearing;
   final Widget child;
 
   @override
@@ -30,11 +31,21 @@ class FwdDynamicMarkerWidget extends StatefulWidget {
 
 class FwdDynamicMarkerWidgetState extends State<FwdDynamicMarkerWidget> {
   late Point _position;
+  late double _bearing;
 
-  Future<void> maplibreMapListener() async {
+  Future<void> _cameraMovingListener() async {
     if (widget.maplibreMapController.isCameraMoving) {
       await calculatePosition();
       setState(() {});
+    }
+  }
+
+  Future<void> _bearingListener() async {
+    if (widget.maplibreMapController.cameraPosition?.bearing != _bearing) {
+      if (widget.maplibreMapController.cameraPosition?.bearing != null) {
+        _bearing = widget.initialBearing + widget.maplibreMapController.cameraPosition!.bearing;
+        setState(() {});
+      }
     }
   }
 
@@ -45,7 +56,10 @@ class FwdDynamicMarkerWidgetState extends State<FwdDynamicMarkerWidget> {
   @override
   void initState() {
     _position = widget.initialPosition;
-    widget.maplibreMapController.addListener(maplibreMapListener);
+    print(widget.initialBearing);
+    _bearing = widget.initialBearing;
+    widget.maplibreMapController.addListener(_cameraMovingListener);
+    widget.maplibreMapController.addListener(_bearingListener);
     super.initState();
   }
 
@@ -60,7 +74,8 @@ class FwdDynamicMarkerWidgetState extends State<FwdDynamicMarkerWidget> {
 
   @override
   void dispose() {
-    widget.maplibreMapController.removeListener(maplibreMapListener);
+    widget.maplibreMapController.removeListener(_cameraMovingListener);
+    widget.maplibreMapController.removeListener(_bearingListener);
     super.dispose();
   }
 
@@ -78,16 +93,21 @@ class FwdDynamicMarkerWidgetState extends State<FwdDynamicMarkerWidget> {
       ratio = Platform.isIOS ? 1.0 : MediaQuery.of(context).devicePixelRatio;
     }
 
+    // print(_bearing);
+
     return Positioned(
       left: _position.x / ratio - 50 / 2,
       top: _position.y / ratio - 50 / 2,
-      child: GestureDetector(
-        onTap: () {
-          if (widget.onMarkerTap != null) {
-            widget.onMarkerTap!(widget.id, widget.coordinate, _position);
-          }
-        },
-        child: widget.child,
+      child: Transform.rotate(
+        angle: -_bearing * pi / 180,
+        child: GestureDetector(
+          onTap: () {
+            if (widget.onMarkerTap != null) {
+              widget.onMarkerTap!(widget.id, widget.coordinate, _position);
+            }
+          },
+          child: widget.child,
+        ),
       ),
     );
   }

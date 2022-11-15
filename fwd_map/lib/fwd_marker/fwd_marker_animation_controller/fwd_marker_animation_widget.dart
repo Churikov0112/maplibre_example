@@ -13,25 +13,21 @@ import 'fwd_marker_animation_state.dart';
 enum FwdMarkerAnimationWidgetType { static, dynamic }
 
 class FwdMarkerAnimationWidget extends StatefulWidget {
-  // const FwdMarkerAnimationWidget._({
-  //   required this.symbol,
-  //   required this.maplibreMapController,
-  //   required this.fwdMarkerAnimationController,
-  //   super.key,
-  // }) : super();
-
   final Symbol? symbol;
   final FwdDynamicMarker? fwdDynamicMarker;
   final MaplibreMapController maplibreMapController;
   final FwdMarkerAnimationController fwdMarkerAnimationController;
   final FwdMarkerAnimationWidgetType type;
-
+  final bool rotate;
+  final double initialBearing;
   final Point? initialMarkerPosition;
 
   const FwdMarkerAnimationWidget.fromSymbol({
     required this.symbol,
     required this.maplibreMapController,
     required this.fwdMarkerAnimationController,
+    required this.rotate,
+    required this.initialBearing,
     super.key,
   })  : type = FwdMarkerAnimationWidgetType.static,
         initialMarkerPosition = null,
@@ -42,6 +38,8 @@ class FwdMarkerAnimationWidget extends StatefulWidget {
     required this.maplibreMapController,
     required this.fwdMarkerAnimationController,
     required this.initialMarkerPosition,
+    required this.rotate,
+    required this.initialBearing,
     super.key,
   })  : type = FwdMarkerAnimationWidgetType.dynamic,
         symbol = null;
@@ -59,6 +57,8 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
 
   late LatLng _currentCoordinate;
   late Point _dynamicMarkerCurrentPosition;
+
+  late double _bearing;
 
   bool get isProcessing => widget.fwdMarkerAnimationController.state == FwdMarkerAnimationState.processing;
 
@@ -99,11 +99,36 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
     _dynamicMarkerCurrentPosition = await widget.maplibreMapController.toScreenLocation(_currentCoordinate);
   }
 
+  Future<void> _staticMarkerBearingListener() async {
+    // if (widget.maplibreMapController.cameraPosition?.bearing != _bearing && widget.symbol != null) {
+    //   if (widget.maplibreMapController.cameraPosition?.bearing != null) {
+    //     _bearing = widget.initialBearing + widget.maplibreMapController.cameraPosition!.bearing;
+    //     if (widget.type == FwdMarkerAnimationWidgetType.static) {
+    //       widget.maplibreMapController.updateSymbol(
+    //         widget.symbol!,
+    //         SymbolOptions(iconRotate: 90.0 - _bearing),
+    //       );
+    //     }
+
+    //     // setState(() {});
+    //   }
+    // }
+    if (widget.maplibreMapController.cameraPosition?.bearing != _bearing) {
+      await widget.maplibreMapController.updateSymbol(
+        widget.symbol!,
+        SymbolOptions(iconRotate: 90.0 - _bearing),
+      );
+    }
+
+    // print("bearing");
+  }
+
   @override
   void initState() {
     super.initState();
 
     if (widget.type == FwdMarkerAnimationWidgetType.static) {
+      _bearing = widget.initialBearing;
       if (widget.symbol!.options.geometry != null) {
         _currentCoordinate = widget.symbol!.options.geometry!;
       }
@@ -118,6 +143,10 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
     widget.fwdMarkerAnimationController.streamController.stream.listen(_handleAction);
 
     _updateState(FwdMarkerAnimationState.init);
+
+    if (!widget.rotate && widget.type == FwdMarkerAnimationWidgetType.static) {
+      widget.maplibreMapController.addListener(_staticMarkerBearingListener);
+    }
 
     _animationController = AnimationController(duration: const Duration(seconds: 5), vsync: this)
       ..addListener(() async {
@@ -149,6 +178,7 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
   @override
   void dispose() {
     _animationController.dispose();
+    widget.maplibreMapController.removeListener(_staticMarkerBearingListener);
     widget.fwdMarkerAnimationController.streamController.close();
     super.dispose();
   }
@@ -161,6 +191,7 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
         id: widget.fwdDynamicMarker!.id,
         coordinate: _currentCoordinate,
         initialPosition: _dynamicMarkerCurrentPosition,
+        initialBearing: widget.initialBearing,
         onMarkerTap: widget.fwdDynamicMarker!.onMarkerTap,
         child: widget.fwdDynamicMarker!.child,
       );

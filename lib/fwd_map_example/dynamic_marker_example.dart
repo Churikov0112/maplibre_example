@@ -36,34 +36,20 @@ class FwdMapDynamicMarkerExample extends StatelessWidget {
         children: [
           FloatingActionButton(
             onPressed: () async {
-              final Random _rnd = Random();
-              final lat = _rnd.nextDouble() + 59;
-              final lng = _rnd.nextDouble() + 30;
-              final coordinate = LatLng(lat, lng);
-
               final widget = Image.asset(
                 'assets/gif/dancing_pinguin_2.gif',
                 height: 50,
               );
 
-              final id = FwdId.fromString(id: _rnd.nextDouble().toString());
+              final id = FwdId.fromString(id: Random().nextDouble().toString());
 
               await _fwdMapController.addDynamicMarker(
                 FwdDynamicMarker(
                   id: id,
-                  initialCoordinate: coordinate,
-                  onMarkerTap: (markerId, coordinate, position) {
-                    // _fwdMapController.deleteMarker(markerId);
-
-                    // final lat = _rnd.nextDouble() + 59;
-                    // final lng = _rnd.nextDouble() + 30;
-                    // final coordinate = LatLng(lat, lng);
-                    // _fwdMapController.animateMarker(
-                    //   markerId: markerId,
-                    //   newLatLng: coordinate,
-                    //   duration: const Duration(seconds: 2),
-                    // );
-                  },
+                  initialCoordinate: LatLng(Random().nextDouble() + 59, Random().nextDouble() + 30),
+                  rotate: false,
+                  bearing: Random().nextInt(359).toDouble(),
+                  onMarkerTap: (markerId, coordinate, position) {},
                   child: widget,
                 ),
               );
@@ -83,6 +69,8 @@ class FwdMapDynamicMarkerExample extends StatelessWidget {
                     id: id,
                     initialCoordinate: LatLng(Random().nextDouble() + 59, Random().nextDouble() + 30),
                     onMarkerTap: (markerId, coordinate, position) {},
+                    rotate: false,
+                    bearing: Random().nextInt(359).toDouble(),
                     child: Image.asset(
                       'assets/gif/dancing_pinguin_2.gif',
                       height: 50,
@@ -115,20 +103,6 @@ class FwdMapDynamicMarkerExample extends StatelessWidget {
                     color: Color.fromRGBO(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255), 1),
                   ),
                 );
-
-                // await _fwdMapController.deleteById(id);
-                // await _fwdMapController.addDynamicMarker(
-                //   FwdDynamicMarker(
-                //     id: oldMarker!.id,
-                //     initialCoordinate: oldMarker.initialCoordinate,
-                //     onMarkerTap: oldMarker.onMarkerTap,
-                //     child: Container(
-                //       height: 50,
-                //       width: 50,
-                //       color: Colors.red,
-                //     ),
-                //   ),
-                // );
               }
             },
             child: const Icon(Icons.refresh),
