@@ -43,7 +43,7 @@ class FwdMapPolylineExample extends StatelessWidget {
                 geometry.add(coordinate);
               }
 
-              final id = FwdId.fromString(id: _rnd.nextDouble().toString());
+              final id = FwdId.fromString(_rnd.nextDouble().toString());
 
               await _fwdMapController.addPolyline(
                 FwdPolyline(

@@ -41,7 +41,7 @@ class FwdMapDynamicMarkerExample extends StatelessWidget {
                 height: 50,
               );
 
-              final id = FwdId.fromString(id: Random().nextDouble().toString());
+              final id = FwdId.fromString(Random().nextDouble().toString());
 
               await _fwdMapController.addDynamicMarker(
                 FwdDynamicMarker(
@@ -62,7 +62,7 @@ class FwdMapDynamicMarkerExample extends StatelessWidget {
           FloatingActionButton(
             onPressed: () async {
               for (var i = 0; i < 20; i++) {
-                final id = FwdId.fromString(id: Random().nextDouble().toString());
+                final id = FwdId.fromString(Random().nextDouble().toString());
 
                 await _fwdMapController.addDynamicMarker(
                   FwdDynamicMarker(

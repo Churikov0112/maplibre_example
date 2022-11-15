@@ -1,9 +1,7 @@
 class FwdId {
   final String id;
 
-  FwdId.fromString({
-    required this.id,
-  });
+  FwdId.fromString(this.id);
 
   @override
   String toString() {

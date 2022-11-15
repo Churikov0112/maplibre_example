@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:flutter/widgets.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
+import '../../fwd_id/fwd_id.dart';
+import '../../fwd_map_helpers/fwd_geo_json_helper.dart';
 import '../dynamic/fwd_dynamic_marker.dart';
 import '../dynamic/fwd_dynamic_marker_widget.dart';
 import 'fwd_marker_animation_controller.dart';
@@ -128,25 +130,17 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
         _currentCoordinate = latLng;
 
         if (widget.type == FwdMarkerAnimationWidgetType.static) {
+          final markerId = FwdId.fromString(
+            (widget.geoJson["features"] as List).first["properties"]["markerId"],
+          );
           widget.maplibreMapController.setGeoJsonSource(
-            "${(widget.geoJson["features"] as List).first["properties"]["markerId"]}_geoJsonSource",
-            {
-              "type": "FeatureCollection",
-              "features": [
-                {
-                  "type": "Feature",
-                  "id": "${(widget.geoJson["features"] as List).first["properties"]["markerId"]}_feature",
-                  "properties": {
-                    "bearing": (widget.geoJson["features"] as List).first["properties"]["bearing"],
-                    "markerId": (widget.geoJson["features"] as List).first["properties"]["markerId"].toString(),
-                  },
-                  "geometry": {
-                    "type": "Point",
-                    "coordinates": [_currentCoordinate.longitude, _currentCoordinate.latitude],
-                  }
-                },
-              ]
-            },
+            FwdGeoJsonHelper.getGeoJsonSourceId(markerId),
+            FwdGeoJsonHelper.pointToGeoJson(
+              staticMarkerId: markerId,
+              bearing: (widget.geoJson["features"] as List).first["properties"]["bearing"],
+              latitude: _currentCoordinate.latitude,
+              longitude: _currentCoordinate.longitude,
+            ),
           );
         }
 

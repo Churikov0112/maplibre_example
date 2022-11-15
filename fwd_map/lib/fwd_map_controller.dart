@@ -4,6 +4,7 @@ import 'package:location/location.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 import 'package:tuple/tuple.dart';
 import 'fwd_id/fwd_id.dart';
+import 'fwd_map_helpers/fwd_geo_json_helper.dart';
 import 'fwd_marker/dynamic/fwd_dynamic_marker.dart';
 import 'fwd_marker/fwd_marker_animation_controller/fwd_marker_animation_controller.dart';
 import 'fwd_marker/static/fwd_static_marker.dart';
@@ -59,36 +60,28 @@ class FwdMapController {
 
   Future<void> addStaticMarker(FwdStaticMarker fwdStaticMarker) async {
     await _maplibreMapController.addImage(
-      "${fwdStaticMarker.id.toString()}_image",
+      FwdGeoJsonHelper.getImageId(fwdStaticMarker.id),
       fwdStaticMarker.bytes,
     );
 
-    final Map<String, dynamic> geoJson = {
-      "type": "FeatureCollection",
-      "features": [
-        {
-          "type": "Feature",
-          "id": "${fwdStaticMarker.id.toString()}_feature",
-          "properties": {
-            "markerId": fwdStaticMarker.id.toString(),
-            "bearing": fwdStaticMarker.bearing,
-          },
-          "geometry": {
-            "type": "Point",
-            "coordinates": [fwdStaticMarker.coordinate.longitude, fwdStaticMarker.coordinate.latitude],
-          }
-        },
-      ]
-    };
+    final geoJson = FwdGeoJsonHelper.pointToGeoJson(
+      staticMarkerId: fwdStaticMarker.id,
+      bearing: fwdStaticMarker.bearing,
+      latitude: fwdStaticMarker.coordinate.latitude,
+      longitude: fwdStaticMarker.coordinate.longitude,
+    );
 
-    await _maplibreMapController.addGeoJsonSource("${fwdStaticMarker.id.toString()}_geoJsonSource", geoJson);
+    await _maplibreMapController.addGeoJsonSource(
+      FwdGeoJsonHelper.getGeoJsonSourceId(fwdStaticMarker.id),
+      geoJson,
+    );
 
     await _maplibreMapController.addSymbolLayer(
-      "${fwdStaticMarker.id.toString()}_geoJsonSource",
-      "${fwdStaticMarker.id.toString()}_symbolLayer",
+      FwdGeoJsonHelper.getGeoJsonSourceId(fwdStaticMarker.id),
+      FwdGeoJsonHelper.getSymbolLayerId(fwdStaticMarker.id),
       SymbolLayerProperties(
         iconRotationAlignment: fwdStaticMarker.rotate ? "auto" : "map",
-        iconImage: "${fwdStaticMarker.id.toString()}_image",
+        iconImage: FwdGeoJsonHelper.getImageId(fwdStaticMarker.id),
         iconAllowOverlap: true,
         iconRotate: fwdStaticMarker.bearing,
       ),
@@ -112,6 +105,7 @@ class FwdMapController {
       geoJson,
       fwdStaticMarker.coordinate,
     );
+
     // ниже - коллбэк
 
     final Map<FwdId, FwdMarkerAnimationWidget> animationWidgetsForCallback = {};
@@ -158,25 +152,15 @@ class FwdMapController {
           newLatLng: newCoordinate,
           duration: const Duration(seconds: 0),
         );
-        newGeoJson = {
-          "type": "FeatureCollection",
-          "features": [
-            {
-              "type": "Feature",
-              "id": "${markerId.toString()}_feature",
-              "properties": {
-                "bearing": (oldGeoJson["features"] as List).first["properties"]["bearing"],
-                "markerId": markerId.toString(),
-              },
-              "geometry": {
-                "type": "Point",
-                "coordinates": [newCoordinate.longitude, newCoordinate.latitude],
-              }
-            },
-          ]
-        };
+        newGeoJson = FwdGeoJsonHelper.pointToGeoJson(
+          staticMarkerId: markerId,
+          bearing: (oldGeoJson["features"] as List).first["properties"]["bearing"],
+          latitude: newCoordinate.latitude,
+          longitude: newCoordinate.longitude,
+        );
+
         await _maplibreMapController.setGeoJsonSource(
-          "${markerId.toString()}_geoJsonSource",
+          FwdGeoJsonHelper.getGeoJsonSourceId(markerId),
           newGeoJson,
         );
       }
@@ -184,7 +168,7 @@ class FwdMapController {
       if (newBearing != null) {
         (newGeoJson["features"] as List).first["properties"]["bearing"] = newBearing;
         await _maplibreMapController.setGeoJsonSource(
-          "${markerId.toString()}_geoJsonSource",
+          FwdGeoJsonHelper.getGeoJsonSourceId(markerId),
           newGeoJson,
         );
       }
@@ -214,14 +198,13 @@ class FwdMapController {
       }
 
       if (newFwdStaticMarker != null) {
-        // _maplibreMapController.onSymbolTapped.add(newFwdStaticMarker.onTap);
         await _maplibreMapController.addImage(
-          "${markerId.toString()}_image",
+          FwdGeoJsonHelper.getImageId(markerId),
           newFwdStaticMarker.bytes,
         );
 
         await _maplibreMapController.setGeoJsonSource(
-          "${markerId.toString()}_geoJsonSource",
+          FwdGeoJsonHelper.getGeoJsonSourceId(markerId),
           newGeoJson,
         );
 
@@ -339,8 +322,8 @@ class FwdMapController {
 
   Future<void> deleteById(FwdId markerId) async {
     if (_staticMarkers.keys.contains(markerId)) {
-      await _maplibreMapController.removeLayer("${markerId.toString()}_symbolLayer");
-      await _maplibreMapController.removeSource("${markerId.toString()}_geoJsonSource");
+      await _maplibreMapController.removeLayer(FwdGeoJsonHelper.getSymbolLayerId(markerId));
+      await _maplibreMapController.removeSource(FwdGeoJsonHelper.getGeoJsonSourceId(markerId));
       _staticMarkers.remove(markerId);
     }
 
@@ -374,26 +357,14 @@ class FwdMapController {
         _staticMarkers[markerId]!.item1,
         _staticMarkers[markerId]!.item2,
         _staticMarkers[markerId]!.item3,
-        {
-          "type": "FeatureCollection",
-          "features": [
-            {
-              "type": "Feature",
-              "id": "${markerId.toString()}_feature",
-              "properties": {
-                "bearing": _staticMarkers[markerId]!.item1.bearing,
-                "markerId": markerId.toString(),
-              },
-              "geometry": {
-                "type": "Point",
-                "coordinates": [newLatLng.longitude, newLatLng.latitude],
-              }
-            },
-          ]
-        },
+        FwdGeoJsonHelper.pointToGeoJson(
+          staticMarkerId: markerId,
+          bearing: _staticMarkers[markerId]!.item1.bearing,
+          latitude: newLatLng.latitude,
+          longitude: newLatLng.longitude,
+        ),
         newLatLng,
       );
-
       _staticMarkers[markerId] = staticMarkerNewLatLng;
       _staticMarkers[markerId]?.item2.animate(point: newLatLng, duration: duration);
     }

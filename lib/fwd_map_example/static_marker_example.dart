@@ -15,7 +15,7 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
   List<FwdId> staticMarkers = [];
 
   Future<FwdStaticMarker> generateRandomFwdStaticMarkerWidgetChild(Random random) async {
-    final id = FwdId.fromString(id: random.nextDouble().toString());
+    final id = FwdId.fromString(random.nextDouble().toString());
     final fwdStaticMarker = await FwdStaticMarker.fromWidget(
       id: id,
       coordinate: LatLng(random.nextDouble() + 59, random.nextDouble() + 30),
