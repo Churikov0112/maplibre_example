@@ -14,6 +14,28 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
 
   List<FwdId> staticMarkers = [];
 
+  Future<FwdStaticMarker> generateRandomFwdStaticMarkerWidgetChild() async {
+    final id = FwdId.fromString(id: Random().nextDouble().toString());
+    final fwdStaticMarker = await FwdStaticMarker.fromWidget(
+      id: FwdId.fromString(id: Random().nextDouble().toString()),
+      coordinate: LatLng(Random().nextDouble() + 59, Random().nextDouble() + 30),
+      onTap: (symbol) {
+        _fwdMapController.animateMarker(
+          markerId: symbol.data?['markerId'],
+          newLatLng: LatLng(Random().nextDouble() + 59, Random().nextDouble() + 30),
+          duration: const Duration(seconds: 2),
+        );
+      },
+      child: Container(
+        width: 50,
+        height: 50,
+        color: Color.fromRGBO(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255), 1),
+      ),
+    );
+    staticMarkers.add(id);
+    return fwdStaticMarker;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,40 +58,27 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
         children: [
           FloatingActionButton(
             onPressed: () async {
-              final Random _rnd = Random();
-              final lat = _rnd.nextDouble() + 59;
-              final lng = _rnd.nextDouble() + 30;
-              final coordinate = LatLng(lat, lng);
-
-              final widget = Container(
-                width: 50,
-                height: 50,
-                color: Colors.red,
-              );
-
-              final id = FwdId.fromString(id: _rnd.nextDouble().toString());
-
-              await _fwdMapController.addStaticMarker(
-                await FwdStaticMarker.fromWidget(
-                  id: id,
-                  coordinate: coordinate,
-                  onTap: (symbol) {
-                    final lat = _rnd.nextDouble() + 59;
-                    final lng = _rnd.nextDouble() + 30;
-                    final coordinate = LatLng(lat, lng);
-                    _fwdMapController.animateMarker(
-                      markerId: symbol.data?['markerId'],
-                      newLatLng: coordinate,
-                      duration: const Duration(seconds: 2),
-                    );
-                  },
-                  child: widget,
-                ),
-              );
-
-              staticMarkers.add(id);
+              final _fwdStaticMarker = await generateRandomFwdStaticMarkerWidgetChild();
+              _fwdMapController.addStaticMarker(_fwdStaticMarker);
             },
             child: const Icon(Icons.add),
+          ),
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            onPressed: () async {
+              // Создание маркеров следует распаралеллить
+              final markers = await Future.wait(
+                [
+                  for (var i = 0; i < 20; i++) generateRandomFwdStaticMarkerWidgetChild(),
+                ],
+              );
+
+              // Добавление маркеров паралеллить не обязательно
+              for (var marker in markers) {
+                await _fwdMapController.addStaticMarker(marker);
+              }
+            },
+            child: const Text("++"),
           ),
           const SizedBox(width: 10),
           FloatingActionButton(

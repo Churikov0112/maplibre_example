@@ -75,6 +75,29 @@ class FwdMapDynamicMarkerExample extends StatelessWidget {
           const SizedBox(width: 10),
           FloatingActionButton(
             onPressed: () async {
+              for (var i = 0; i < 20; i++) {
+                final id = FwdId.fromString(id: Random().nextDouble().toString());
+
+                await _fwdMapController.addDynamicMarker(
+                  FwdDynamicMarker(
+                    id: id,
+                    initialCoordinate: LatLng(Random().nextDouble() + 59, Random().nextDouble() + 30),
+                    onMarkerTap: (markerId, coordinate, position) {},
+                    child: Image.asset(
+                      'assets/gif/dancing_pinguin_2.gif',
+                      height: 50,
+                    ),
+                  ),
+                );
+
+                markerIds.add(id);
+              }
+            },
+            child: const Text("++"),
+          ),
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            onPressed: () async {
               if (markerIds.isNotEmpty) {
                 final id = markerIds.last;
                 final coordinate = LatLng(Random().nextDouble() + 59, Random().nextDouble() + 30);
