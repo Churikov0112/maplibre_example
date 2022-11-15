@@ -58,8 +58,6 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
   late LatLng _currentCoordinate;
   late Point _dynamicMarkerCurrentPosition;
 
-  late double _bearing;
-
   bool get isProcessing => widget.fwdMarkerAnimationController.state == FwdMarkerAnimationState.processing;
 
   Future<void> _handleAction(FwdMarkerAnimationEvent event) {
@@ -104,7 +102,6 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
     super.initState();
 
     if (widget.type == FwdMarkerAnimationWidgetType.static) {
-      _bearing = widget.initialBearing;
       if ((widget.geoJson["features"] as List).first["geometry"] != null) {
         _currentCoordinate = LatLng(
           ((widget.geoJson["features"] as List).first["geometry"]["coordinates"] as List).last, // lng
@@ -130,9 +127,6 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
 
         _currentCoordinate = latLng;
 
-        print((widget.geoJson["features"] as List).first["geometry"]["coordinates"]);
-        // print("${(widget.geoJson["features"] as List).first["properties"]["markerId"]}_geoJsonSource");
-
         if (widget.type == FwdMarkerAnimationWidgetType.static) {
           widget.maplibreMapController.setGeoJsonSource(
             "${(widget.geoJson["features"] as List).first["properties"]["markerId"]}_geoJsonSource",
@@ -156,17 +150,10 @@ class _FwdMarkerAnimationWidgetState extends State<FwdMarkerAnimationWidget> wit
           );
         }
 
-        print("2");
-
         if (widget.type == FwdMarkerAnimationWidgetType.dynamic) {
           _dynamicMarkerCurrentPosition = await widget.maplibreMapController.toScreenLocation(_currentCoordinate);
         }
-
-        print("3");
-
         setState(() {});
-
-        print("4");
       });
 
     // Устанавливаем линейную анимацию

@@ -94,9 +94,7 @@ class FwdMapDynamicMarkerExample extends StatelessWidget {
                 await _fwdMapController.updateDynamicMarker(
                   markerId: id,
                   newCoordinate: coordinate,
-                  newOnMarkerTap: (markerId, coordinate, position) {
-                    print("hello from $markerId");
-                  },
+                  newOnMarkerTap: (markerId, coordinate, position) {},
                   newChild: Container(
                     height: 50,
                     width: 50,

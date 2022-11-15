@@ -30,16 +30,11 @@ class AnimatedMarkerExampleState extends State<AnimatedMarkerExample> {
     LatLng oldCoordinate = markerState.getCoordinate();
     LatLng targetCoordinate = LatLng(oldCoordinate.latitude + 0.1, oldCoordinate.longitude + 0.1);
 
-    print(oldCoordinate.toString());
-    print(targetCoordinate.toString());
-
     LatLng dynamicCoordinate = oldCoordinate;
 
     Timer.periodic(const Duration(milliseconds: 100), (timer) async {
-      print(timer.tick);
       if (targetCoordinate.latitude == dynamicCoordinate.latitude &&
           targetCoordinate.longitude == dynamicCoordinate.longitude) {
-        print("Приехали");
         timer.cancel();
       }
 
@@ -48,25 +43,14 @@ class AnimatedMarkerExampleState extends State<AnimatedMarkerExample> {
         oldCoordinate.longitude + timer.tick * (targetCoordinate.longitude - oldCoordinate.longitude) / 100,
       );
 
-      print(dynamicCoordinate.toString());
-
       Point<num> dynamicPoint = await _mapController.toScreenLocation(dynamicCoordinate);
-
-      print(dynamicPoint.toString());
 
       _markerStates[markerState.widget.id]?.updatePosition(dynamicPoint);
       _markerStates[markerState.widget.id]?.setCoordinate(dynamicCoordinate);
-
-      // setState(() {});
-
-      // _updateMarkerPosition();
     });
   }
 
   Future<void> _onMarkerTap(Marker marker, MarkerState markerState) async {
-    print("marker: $marker");
-    print("markerState: $markerState");
-
     await moveMarker(markerState);
   }
 
@@ -79,9 +63,7 @@ class AnimatedMarkerExampleState extends State<AnimatedMarkerExample> {
     });
   }
 
-  void _onStyleLoadedCallback() {
-    print('onStyleLoadedCallback');
-  }
+  void _onStyleLoadedCallback() {}
 
   void _onMapLongClickCallback(Point<double> point, LatLng coordinates) {
     _addMarker(point, coordinates);

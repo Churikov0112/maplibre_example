@@ -112,9 +112,6 @@ class FwdMapController {
       geoJson,
       fwdStaticMarker.coordinate,
     );
-
-    print(fwdStaticMarker.id);
-
     // ниже - коллбэк
 
     final Map<FwdId, FwdMarkerAnimationWidget> animationWidgetsForCallback = {};
@@ -143,9 +140,6 @@ class FwdMapController {
 
     Tuple5<FwdStaticMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, Map<String, dynamic>, LatLng>?
         oldStaticMarker;
-
-    print(_staticMarkers.keys);
-    print(markerId);
 
     if (_staticMarkers.keys.contains(markerId)) {
       oldStaticMarker = _staticMarkers[markerId];
@@ -345,7 +339,6 @@ class FwdMapController {
 
   Future<void> deleteById(FwdId markerId) async {
     if (_staticMarkers.keys.contains(markerId)) {
-      print("need remove");
       await _maplibreMapController.removeLayer("${markerId.toString()}_symbolLayer");
       await _maplibreMapController.removeSource("${markerId.toString()}_geoJsonSource");
       _staticMarkers.remove(markerId);
@@ -376,7 +369,6 @@ class FwdMapController {
     required Duration duration,
   }) async {
     if (_staticMarkers.keys.contains(markerId)) {
-      print("need animate");
       // Обновляем маркер, чтобы хранить последнюю координату маркера в мапе
       final staticMarkerNewLatLng = Tuple5(
         _staticMarkers[markerId]!.item1,

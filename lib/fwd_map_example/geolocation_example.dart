@@ -40,7 +40,6 @@ class _FwdMapLocationExampleState extends State<FwdMapLocationExample> {
               setState(() => locationLoading = true);
               try {
                 final latLng = await _fwdMapController.getUserLocation();
-                print(latLng);
                 if (latLng != null) {
                   _fwdMapController.animateCamera(
                     CameraUpdate.newLatLngZoom(latLng, 16),
@@ -48,7 +47,6 @@ class _FwdMapLocationExampleState extends State<FwdMapLocationExample> {
                   );
                 }
               } catch (e) {
-                print(e);
                 setState(() => locationLoading = false);
               }
               setState(() => locationLoading = false);

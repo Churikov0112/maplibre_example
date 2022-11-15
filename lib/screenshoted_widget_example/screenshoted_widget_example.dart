@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:maplibre_example/screenshoted_widget_example/custom_toast_widget.dart';
 import 'package:screenshot/screenshot.dart';
@@ -97,7 +95,6 @@ class ScreenshotedWidgetExampleState extends State<ScreenshotedWidgetExample> {
                   );
                 } catch (e) {
                   timer.cancel();
-                  print("приехали");
                   return;
                 }
               });
@@ -288,12 +285,8 @@ class ScreenshotedWidgetExampleState extends State<ScreenshotedWidgetExample> {
   }
 
   void _onStyleLoadedCallback() async {
-    Stopwatch stopwatch = Stopwatch()..start();
-
     // распараллеленное добавление маркеров
     await Future.wait([for (final feature in (_points['features'] as List)) addSymbolByWidget(feature: feature)]);
-
-    print('Это длилось ${stopwatch.elapsed}');
   }
 }
 

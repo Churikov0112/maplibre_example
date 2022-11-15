@@ -56,7 +56,6 @@ class FwdDynamicMarkerWidgetState extends State<FwdDynamicMarkerWidget> {
   @override
   void initState() {
     _position = widget.initialPosition;
-    print(widget.initialBearing);
     _bearing = widget.initialBearing;
     widget.maplibreMapController.addListener(_cameraMovingListener);
     widget.maplibreMapController.addListener(_bearingListener);

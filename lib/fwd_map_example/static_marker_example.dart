@@ -105,8 +105,6 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
                 color: Color.fromRGBO(Random().nextInt(255), Random().nextInt(255), Random().nextInt(255), 1),
               );
 
-              print(staticMarkers.last);
-
               await _fwdMapController.updateStaticMarker(
                 markerId: staticMarkers.last,
                 newCoordinate: coordinate,
