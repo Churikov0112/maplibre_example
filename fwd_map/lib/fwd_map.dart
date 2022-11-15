@@ -14,17 +14,17 @@ export 'fwd_marker/static/fwd_static_marker.dart' show FwdStaticMarker;
 
 class FwdMap extends StatefulWidget {
   const FwdMap({
-    required this.styleString,
     required this.initialCameraPosition,
     required this.trackCameraPosition,
     required this.onFwdMapCreated,
     required this.onMapLongClick,
     required this.onCameraIdle,
     required this.onStyleLoadedCallback,
+    this.styleString,
     super.key,
   });
 
-  final String styleString;
+  final String? styleString;
   final CameraPosition initialCameraPosition;
   final bool trackCameraPosition;
 
@@ -67,7 +67,7 @@ class _FwdMapState extends State<FwdMap> {
     return Stack(
       children: [
         MaplibreMap(
-          styleString: "https://map.91.team/styles/basic/style.json",
+          styleString: widget.styleString,
           trackCameraPosition: true,
           onMapCreated: _onMapCreated,
           onMapLongClick: widget.onMapLongClick,

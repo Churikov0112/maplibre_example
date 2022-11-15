@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/widgets.dart';
+import 'package:location/location.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 import 'package:tuple/tuple.dart';
 import 'fwd_id/fwd_id.dart';
@@ -13,8 +14,8 @@ import 'fwd_polyline/fwd_polyline.dart';
 class FwdMapController {
   final MaplibreMapController _maplibreMapController;
 
-  // ignore: prefer_final_fields
   Map<FwdId, Tuple5<FwdStaticMarker, FwdMarkerAnimationController, FwdMarkerAnimationWidget, Symbol, LatLng>>
+      // ignore: prefer_final_fields
       _staticMarkers = {};
   final Function(Map<FwdId, FwdMarkerAnimationWidget>) _updateStaticMarkerAnimationWidgetsCallback;
 
@@ -327,6 +328,17 @@ class FwdMapController {
     }
   }
 
+  Future<void> moveCamera(CameraUpdate cameraUpdate) async {
+    await _maplibreMapController.moveCamera(cameraUpdate);
+  }
+
+  Future<void> animateCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+  }) async {
+    await _maplibreMapController.animateCamera(cameraUpdate, duration: duration);
+  }
+
   Future<void> addPolyline(FwdPolyline fwdPolyline) async {
     final line = await _maplibreMapController.addLine(
       LineOptions(
@@ -369,5 +381,39 @@ class FwdMapController {
 
   Future<Point<num>> toScreenLocation(LatLng latLng) async {
     return await _maplibreMapController.toScreenLocation(latLng);
+  }
+
+  Future<LatLng?> getUserLocation() async {
+    Location location = Location();
+
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
+    LocationData locationData;
+
+    serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        return null;
+      }
+    }
+
+    permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        return null;
+      }
+    }
+
+    LatLng? latLng;
+
+    try {
+      locationData = await location.getLocation();
+      latLng = LatLng(locationData.latitude!, locationData.longitude!);
+    } catch (e) {
+      return null;
+    }
+    return latLng;
   }
 }

@@ -3,6 +3,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_example/fwd_map_example/static_marker_example.dart';
 import 'fwd_map_example/dynamic_marker_example.dart';
+import 'fwd_map_example/geolocation_example.dart';
 import 'fwd_map_example/polygon_example.dart';
 import 'fwd_map_example/polyline_example.dart';
 
@@ -75,6 +76,17 @@ class MenuPage extends StatelessWidget {
             },
             title: const Text("Polygon example"),
             trailing: const Icon(Icons.square),
+          ),
+          ListTile(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (BuildContext context) => const FwdMapLocationExample(),
+                ),
+              );
+            },
+            title: const Text("Location example"),
+            trailing: const Icon(Icons.place),
           ),
         ],
       ),
