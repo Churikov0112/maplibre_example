@@ -19,7 +19,11 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
     final fwdStaticMarker = await FwdStaticMarker.fromWidget(
       id: id,
       coordinate: LatLng(random.nextDouble() + 59, random.nextDouble() + 30),
-      onTap: (symbol) {},
+      onTap: (dynamic featureId, Point<double> posistion, LatLng coordinate) {
+        print(featureId);
+        print(posistion);
+        print(coordinate);
+      },
       rotate: false,
       bearing: 45,
       child: Container(

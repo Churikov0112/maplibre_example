@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data' show Uint8List;
 import 'package:flutter/widgets.dart' show Widget;
 import 'package:maplibre_gl/mapbox_gl.dart';
@@ -10,7 +11,8 @@ class FwdStaticMarker {
   final LatLng coordinate;
   final bool rotate;
   final double bearing;
-  final void Function(Symbol) onTap;
+  final void Function(dynamic, Point<double>, LatLng) onTap;
+
   final Uint8List bytes;
 
   const FwdStaticMarker._(
@@ -25,7 +27,7 @@ class FwdStaticMarker {
   static Future<FwdStaticMarker> fromWidget({
     required FwdId id,
     required LatLng coordinate,
-    required void Function(Symbol) onTap,
+    required void Function(dynamic, Point<double>, LatLng) onTap,
     required Widget child,
     bool rotate = true,
     double bearing = 0.0,
@@ -37,7 +39,7 @@ class FwdStaticMarker {
   static Future<FwdStaticMarker> fromImageAsset({
     required FwdId id,
     required LatLng coordinate,
-    required void Function(Symbol) onTap,
+    required void Function(dynamic, Point<double>, LatLng) onTap,
     required String imageAssetPath,
     bool rotate = true,
     double bearing = 0.0,
@@ -49,7 +51,7 @@ class FwdStaticMarker {
   static Future<FwdStaticMarker> fromImageNetwork({
     required FwdId id,
     required LatLng coordinate,
-    required void Function(Symbol) onTap,
+    required void Function(dynamic, Point<double>, LatLng) onTap,
     required String imageUrl,
     bool rotate = true,
     double bearing = 0.0,

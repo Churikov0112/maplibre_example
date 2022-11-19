@@ -11,6 +11,9 @@ class FwdGeoJsonHelper {
 
   static String getFeatureId(FwdId markerId) => "${markerId}_feature";
 
+  static FwdId getMarkerIdFromFeatureId(dynamic featureId) =>
+      FwdId.fromString(featureId.toString().substring(0, featureId.toString().length - 8));
+
   static Map<String, dynamic> pointToGeoJson({
     required FwdId staticMarkerId,
     required double bearing,

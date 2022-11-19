@@ -56,7 +56,18 @@ class FwdMapController {
     this._maplibreMapController,
     this._updateDynamicMarkerWidgetsCallback,
     this._updateStaticMarkerAnimationWidgetsCallback,
-  );
+  ) {
+    _maplibreMapController.onFeatureTapped.add(_onFeatureTapped);
+  }
+
+  void _onFeatureTapped(dynamic featureId, Point<double> position, LatLng coordinate) {
+    // need to remove _feature ending that 8 symbols length
+    final FwdId markerId = FwdGeoJsonHelper.getMarkerIdFromFeatureId(featureId);
+
+    if (_staticMarkers.keys.contains(markerId)) {
+      _staticMarkers[markerId]?.item1.onTap.call(featureId, position, coordinate);
+    }
+  }
 
   Future<void> addStaticMarker(FwdStaticMarker fwdStaticMarker) async {
     await _maplibreMapController.addImage(
