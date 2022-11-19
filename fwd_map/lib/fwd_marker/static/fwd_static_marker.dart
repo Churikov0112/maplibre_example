@@ -11,7 +11,7 @@ class FwdStaticMarker {
   final LatLng coordinate;
   final bool rotate;
   final double bearing;
-  final void Function(dynamic, Point<double>, LatLng) onTap;
+  final void Function(FwdId, Point<double>, LatLng) onTap;
 
   final Uint8List bytes;
 
@@ -27,7 +27,7 @@ class FwdStaticMarker {
   static Future<FwdStaticMarker> fromWidget({
     required FwdId id,
     required LatLng coordinate,
-    required void Function(dynamic, Point<double>, LatLng) onTap,
+    required void Function(FwdId, Point<double>, LatLng) onTap,
     required Widget child,
     bool rotate = true,
     double bearing = 0.0,
@@ -39,7 +39,7 @@ class FwdStaticMarker {
   static Future<FwdStaticMarker> fromImageAsset({
     required FwdId id,
     required LatLng coordinate,
-    required void Function(dynamic, Point<double>, LatLng) onTap,
+    required void Function(FwdId, Point<double>, LatLng) onTap,
     required String imageAssetPath,
     bool rotate = true,
     double bearing = 0.0,
@@ -51,7 +51,7 @@ class FwdStaticMarker {
   static Future<FwdStaticMarker> fromImageNetwork({
     required FwdId id,
     required LatLng coordinate,
-    required void Function(dynamic, Point<double>, LatLng) onTap,
+    required void Function(FwdId, Point<double>, LatLng) onTap,
     required String imageUrl,
     bool rotate = true,
     double bearing = 0.0,

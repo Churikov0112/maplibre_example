@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 import 'package:maplibre_gl/mapbox_gl.dart';
 import '../fwd_id/fwd_id.dart';
@@ -8,6 +9,7 @@ class FwdPolygon {
   final double? borderThickness;
   final Color? fillColor;
   final Color? borderColor;
+  final Function(FwdId, Point<double>, LatLng)? onTap;
 
   FwdPolygon({
     required this.id,
@@ -15,5 +17,6 @@ class FwdPolygon {
     this.borderThickness,
     this.borderColor,
     this.fillColor,
+    this.onTap,
   });
 }

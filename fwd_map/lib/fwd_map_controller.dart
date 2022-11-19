@@ -27,10 +27,11 @@ class FwdMapController {
   final Function(Map<FwdId, FwdMarkerAnimationWidget>) _updateDynamicMarkerWidgetsCallback;
 
   // ignore: prefer_final_fields
-  Map<FwdId, Tuple2<FwdPolyline, Line>> _polylines = {};
+  Map<FwdId, Tuple2<FwdPolyline, Map<String, dynamic>>> _polylines = {};
 
   // ignore: prefer_final_fields
-  Map<FwdId, Tuple3<FwdPolygon, Line, Fill>> _polygons = {};
+  // polygon, line, fill
+  Map<FwdId, Tuple3<FwdPolygon, Map<String, dynamic>, Map<String, dynamic>>> _polygons = {};
 
   FwdStaticMarker? getFwdStaticMarkerById(FwdId id) {
     if (_staticMarkers.keys.contains(id)) return _staticMarkers[id]!.item1;
@@ -61,11 +62,24 @@ class FwdMapController {
   }
 
   void _onFeatureTapped(dynamic featureId, Point<double> position, LatLng coordinate) {
-    // need to remove _feature ending that 8 symbols length
-    final FwdId markerId = FwdGeoJsonHelper.getMarkerIdFromFeatureId(featureId);
+    final FwdId markerIdFromPointFeatureId = FwdGeoJsonHelper.markerIdFromPointFeatureId(featureId);
+    final FwdId polylineIdFromPolylineFeatureId = FwdGeoJsonHelper.markerIdFromPolylineFeatureId(featureId);
+    final FwdId polygonIdFromPolygonFeatureId = FwdGeoJsonHelper.markerIdFromPolygonFeatureId(featureId);
 
-    if (_staticMarkers.keys.contains(markerId)) {
-      _staticMarkers[markerId]?.item1.onTap.call(featureId, position, coordinate);
+    if (_staticMarkers.keys.contains(markerIdFromPointFeatureId)) {
+      _staticMarkers[markerIdFromPointFeatureId]?.item1.onTap.call(markerIdFromPointFeatureId, position, coordinate);
+      return;
+    }
+    if (_polylines.keys.contains(polylineIdFromPolylineFeatureId)) {
+      _polylines[polylineIdFromPolylineFeatureId]
+          ?.item1
+          .onTap
+          ?.call(polygonIdFromPolygonFeatureId, position, coordinate);
+      return;
+    }
+    if (_polygons.keys.contains(polygonIdFromPolygonFeatureId)) {
+      _polygons[polygonIdFromPolygonFeatureId]?.item1.onTap?.call(polygonIdFromPolygonFeatureId, position, coordinate);
+      return;
     }
   }
 
@@ -75,21 +89,20 @@ class FwdMapController {
       fwdStaticMarker.bytes,
     );
 
-    final geoJson = FwdGeoJsonHelper.pointToGeoJson(
+    final geoJson = FwdGeoJsonHelper.pointGeoJson(
       staticMarkerId: fwdStaticMarker.id,
       bearing: fwdStaticMarker.bearing,
-      latitude: fwdStaticMarker.coordinate.latitude,
-      longitude: fwdStaticMarker.coordinate.longitude,
+      geometry: fwdStaticMarker.coordinate,
     );
 
     await _maplibreMapController.addGeoJsonSource(
-      FwdGeoJsonHelper.getGeoJsonSourceId(fwdStaticMarker.id),
+      FwdGeoJsonHelper.pointGeoJsonSourceId(fwdStaticMarker.id),
       geoJson,
     );
 
     await _maplibreMapController.addSymbolLayer(
-      FwdGeoJsonHelper.getGeoJsonSourceId(fwdStaticMarker.id),
-      FwdGeoJsonHelper.getSymbolLayerId(fwdStaticMarker.id),
+      FwdGeoJsonHelper.pointGeoJsonSourceId(fwdStaticMarker.id),
+      FwdGeoJsonHelper.symbolLayerId(fwdStaticMarker.id),
       SymbolLayerProperties(
         iconRotationAlignment: fwdStaticMarker.rotate ? "auto" : "map",
         iconImage: FwdGeoJsonHelper.getImageId(fwdStaticMarker.id),
@@ -163,15 +176,14 @@ class FwdMapController {
           newLatLng: newCoordinate,
           duration: const Duration(seconds: 0),
         );
-        newGeoJson = FwdGeoJsonHelper.pointToGeoJson(
+        newGeoJson = FwdGeoJsonHelper.pointGeoJson(
           staticMarkerId: markerId,
-          bearing: FwdGeoJsonHelper.getPointBearing(oldGeoJson),
-          latitude: newCoordinate.latitude,
-          longitude: newCoordinate.longitude,
+          bearing: FwdGeoJsonHelper.pointBearingFromGeoJson(oldGeoJson),
+          geometry: newCoordinate,
         );
 
         await _maplibreMapController.setGeoJsonSource(
-          FwdGeoJsonHelper.getGeoJsonSourceId(markerId),
+          FwdGeoJsonHelper.pointGeoJsonSourceId(markerId),
           newGeoJson,
         );
       }
@@ -179,7 +191,7 @@ class FwdMapController {
       if (newBearing != null) {
         (newGeoJson["features"] as List).first["properties"]["bearing"] = newBearing;
         await _maplibreMapController.setGeoJsonSource(
-          FwdGeoJsonHelper.getGeoJsonSourceId(markerId),
+          FwdGeoJsonHelper.pointGeoJsonSourceId(markerId),
           newGeoJson,
         );
       }
@@ -215,7 +227,7 @@ class FwdMapController {
         );
 
         await _maplibreMapController.setGeoJsonSource(
-          FwdGeoJsonHelper.getGeoJsonSourceId(markerId),
+          FwdGeoJsonHelper.pointGeoJsonSourceId(markerId),
           newGeoJson,
         );
 
@@ -331,29 +343,29 @@ class FwdMapController {
     }
   }
 
-  Future<void> deleteById(FwdId markerId) async {
-    if (_staticMarkers.keys.contains(markerId)) {
-      await _maplibreMapController.removeLayer(FwdGeoJsonHelper.getSymbolLayerId(markerId));
-      await _maplibreMapController.removeSource(FwdGeoJsonHelper.getGeoJsonSourceId(markerId));
-      _staticMarkers.remove(markerId);
+  Future<void> deleteById(FwdId fwdId) async {
+    if (_staticMarkers.keys.contains(fwdId)) {
+      await _maplibreMapController.removeLayer(FwdGeoJsonHelper.symbolLayerId(fwdId));
+      await _maplibreMapController.removeSource(FwdGeoJsonHelper.pointGeoJsonSourceId(fwdId));
+      _staticMarkers.remove(fwdId);
     }
-
-    if (_dynamicMarkers.keys.contains(markerId)) {
-      _dynamicMarkers.removeWhere((id, widget) => id == markerId);
+    if (_dynamicMarkers.keys.contains(fwdId)) {
+      _dynamicMarkers.removeWhere((id, widget) => id == fwdId);
       final Map<FwdId, FwdMarkerAnimationWidget> dynamicMarkerAnimationWidgetsForCallback = {};
       _dynamicMarkers.forEach((id, tuple4) => dynamicMarkerAnimationWidgetsForCallback[id] = tuple4.item3);
       _updateDynamicMarkerWidgetsCallback(dynamicMarkerAnimationWidgetsForCallback);
     }
-
-    if (_polylines.keys.contains(markerId)) {
-      await _maplibreMapController.removeLine(_polylines[markerId]!.item2);
-      _polylines.remove(markerId);
+    if (_polylines.keys.contains(fwdId)) {
+      await _maplibreMapController.removeLayer(FwdGeoJsonHelper.lineLayerId(fwdId));
+      await _maplibreMapController.removeSource(FwdGeoJsonHelper.lineGeoJsonSourceId(fwdId));
+      _polylines.remove(fwdId);
     }
-
-    if (_polygons.keys.contains(markerId)) {
-      await _maplibreMapController.removeLine(_polygons[markerId]!.item2);
-      await _maplibreMapController.removeFill(_polygons[markerId]!.item3);
-      _polygons.remove(markerId);
+    if (_polygons.keys.contains(fwdId)) {
+      await _maplibreMapController.removeLayer(FwdGeoJsonHelper.lineLayerId(fwdId));
+      await _maplibreMapController.removeLayer(FwdGeoJsonHelper.fillLayerId(fwdId));
+      await _maplibreMapController.removeSource(FwdGeoJsonHelper.lineGeoJsonSourceId(fwdId));
+      await _maplibreMapController.removeSource(FwdGeoJsonHelper.fillGeoJsonSourceId(fwdId));
+      _polygons.remove(fwdId);
     }
   }
 
@@ -368,11 +380,10 @@ class FwdMapController {
         _staticMarkers[markerId]!.item1,
         _staticMarkers[markerId]!.item2,
         _staticMarkers[markerId]!.item3,
-        FwdGeoJsonHelper.pointToGeoJson(
+        FwdGeoJsonHelper.pointGeoJson(
           staticMarkerId: markerId,
           bearing: _staticMarkers[markerId]!.item1.bearing,
-          latitude: newLatLng.latitude,
-          longitude: newLatLng.longitude,
+          geometry: newLatLng,
         ),
         newLatLng,
       );
@@ -392,55 +403,71 @@ class FwdMapController {
     }
   }
 
-  Future<void> moveCamera(CameraUpdate cameraUpdate) async {
-    await _maplibreMapController.moveCamera(cameraUpdate);
-  }
-
-  Future<void> animateCamera(
-    CameraUpdate cameraUpdate, {
-    Duration? duration,
-  }) async {
-    await _maplibreMapController.animateCamera(cameraUpdate, duration: duration);
-  }
-
   Future<void> addPolyline(FwdPolyline fwdPolyline) async {
-    final line = await _maplibreMapController.addLine(
-      LineOptions(
-        geometry: fwdPolyline.geometry,
+    final lineGeoJson = FwdGeoJsonHelper.lineGeoJson(
+      polylineId: fwdPolyline.id,
+      geometry: fwdPolyline.geometry,
+    );
+
+    await _maplibreMapController.addGeoJsonSource(
+      FwdGeoJsonHelper.lineGeoJsonSourceId(fwdPolyline.id),
+      lineGeoJson,
+    );
+
+    await _maplibreMapController.addLineLayer(
+      FwdGeoJsonHelper.lineGeoJsonSourceId(fwdPolyline.id),
+      FwdGeoJsonHelper.lineLayerId(fwdPolyline.id),
+      LineLayerProperties(
         lineWidth: fwdPolyline.thickness,
         lineColor: fwdPolyline.color?.toHexStringRGB(),
         lineOpacity: fwdPolyline.color?.opacity,
       ),
-      {
-        "polylineId": fwdPolyline.id,
-      },
     );
-    _polylines[fwdPolyline.id] = Tuple2(fwdPolyline, line);
+
+    _polylines[fwdPolyline.id] = Tuple2(fwdPolyline, lineGeoJson);
   }
 
   Future<void> addPolygon(FwdPolygon fwdPolygon) async {
-    final line = await _maplibreMapController.addLine(
-      LineOptions(
-        geometry: fwdPolygon.geometry.first,
+    final lineGeoJson = FwdGeoJsonHelper.lineGeoJson(
+      polylineId: fwdPolygon.id,
+      geometry: fwdPolygon.geometry.first,
+    );
+
+    final fillGeoJson = FwdGeoJsonHelper.fillGeoJson(
+      polygoneId: fwdPolygon.id,
+      geometry: fwdPolygon.geometry,
+    );
+
+    await _maplibreMapController.addGeoJsonSource(
+      FwdGeoJsonHelper.lineGeoJsonSourceId(fwdPolygon.id),
+      lineGeoJson,
+    );
+
+    await _maplibreMapController.addGeoJsonSource(
+      FwdGeoJsonHelper.fillGeoJsonSourceId(fwdPolygon.id),
+      fillGeoJson,
+    );
+
+    await _maplibreMapController.addLineLayer(
+      FwdGeoJsonHelper.lineGeoJsonSourceId(fwdPolygon.id),
+      FwdGeoJsonHelper.lineLayerId(fwdPolygon.id),
+      LineLayerProperties(
         lineWidth: fwdPolygon.borderThickness,
         lineColor: fwdPolygon.borderColor?.toHexStringRGB(),
         lineOpacity: fwdPolygon.borderColor?.opacity,
       ),
-      {
-        "polygonId": fwdPolygon.id,
-      },
     );
-    final fill = await _maplibreMapController.addFill(
-      FillOptions(
+
+    await _maplibreMapController.addFillLayer(
+      FwdGeoJsonHelper.fillGeoJsonSourceId(fwdPolygon.id),
+      FwdGeoJsonHelper.fillLayerId(fwdPolygon.id),
+      FillLayerProperties(
         fillColor: fwdPolygon.fillColor?.toHexStringRGB(),
         fillOpacity: fwdPolygon.fillColor?.opacity,
-        geometry: fwdPolygon.geometry,
       ),
-      {
-        "polygonId": fwdPolygon.id,
-      },
     );
-    _polygons[fwdPolygon.id] = Tuple3(fwdPolygon, line, fill);
+
+    _polygons[fwdPolygon.id] = Tuple3(fwdPolygon, lineGeoJson, fillGeoJson);
   }
 
   Future<Point<num>> toScreenLocation(LatLng latLng) async {
@@ -479,5 +506,16 @@ class FwdMapController {
       return null;
     }
     return latLng;
+  }
+
+  Future<void> moveCamera(CameraUpdate cameraUpdate) async {
+    await _maplibreMapController.moveCamera(cameraUpdate);
+  }
+
+  Future<void> animateCamera(
+    CameraUpdate cameraUpdate, {
+    Duration? duration,
+  }) async {
+    await _maplibreMapController.animateCamera(cameraUpdate, duration: duration);
   }
 }

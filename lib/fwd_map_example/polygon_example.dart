@@ -13,6 +13,8 @@ class FwdMapPolygonExample extends StatelessWidget {
 
   late FwdMapController _fwdMapController;
 
+  final List<FwdId> polygonIds = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,10 +59,26 @@ class FwdMapPolygonExample extends StatelessWidget {
                   fillColor: const Color.fromRGBO(255, 100, 100, 0.2),
                   borderColor: const Color.fromRGBO(255, 100, 100, 1),
                   borderThickness: 2,
+                  onTap: (polygonId, position, latLng) {
+                    print(polygonId);
+                  },
                 ),
               );
+
+              polygonIds.add(id);
             },
             child: const Icon(Icons.square),
+          ),
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            onPressed: () async {
+              if (polygonIds.isNotEmpty) {
+                final id = polygonIds.last;
+                await _fwdMapController.deleteById(id);
+                polygonIds.remove(id);
+              }
+            },
+            child: const Icon(Icons.delete),
           ),
         ],
       ),

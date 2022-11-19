@@ -12,6 +12,8 @@ class FwdMapPolylineExample extends StatelessWidget {
 
   late FwdMapController _fwdMapController;
 
+  final List<FwdId> polylineIds = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,10 +53,26 @@ class FwdMapPolylineExample extends StatelessWidget {
                   geometry: geometry,
                   thickness: 10,
                   color: const Color.fromRGBO(255, 100, 100, 1),
+                  onTap: (polylineId, position, latLng) {
+                    print(polylineId);
+                  },
                 ),
               );
+
+              polylineIds.add(id);
             },
             child: const Icon(Icons.line_axis),
+          ),
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            onPressed: () async {
+              if (polylineIds.isNotEmpty) {
+                final id = polylineIds.last;
+                await _fwdMapController.deleteById(id);
+                polylineIds.remove(id);
+              }
+            },
+            child: const Icon(Icons.delete),
           ),
         ],
       ),
