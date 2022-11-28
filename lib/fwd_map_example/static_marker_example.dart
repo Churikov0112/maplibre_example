@@ -125,6 +125,15 @@ class FwdMapStaticMarkerExample extends StatelessWidget {
             },
             child: const Icon(Icons.delete),
           ),
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            backgroundColor: Colors.red,
+            onPressed: () async {
+              await _fwdMapController.clearMap();
+              staticMarkers.clear();
+            },
+            child: const Icon(Icons.delete),
+          ),
         ],
       ),
     );

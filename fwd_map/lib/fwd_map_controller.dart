@@ -369,6 +369,40 @@ class FwdMapController {
     }
   }
 
+  Future<void> clearMap() async {
+    // clear all static markers
+    _staticMarkers.forEach((fwdId, tuple) async {
+      await _maplibreMapController.removeLayer(FwdGeoJsonHelper.symbolLayerId(fwdId));
+      await _maplibreMapController.removeSource(FwdGeoJsonHelper.pointGeoJsonSourceId(fwdId));
+    });
+    _staticMarkers.clear();
+    _updateStaticMarkerAnimationWidgetsCallback(<FwdId, FwdMarkerAnimationWidget>{});
+    //
+
+    // clear all dynamic markers
+    _dynamicMarkers.clear();
+    _updateDynamicMarkerWidgetsCallback(<FwdId, FwdMarkerAnimationWidget>{});
+    //
+
+    // clear all polylines
+    _polylines.forEach((fwdId, tuple) async {
+      await _maplibreMapController.removeLayer(FwdGeoJsonHelper.lineLayerId(fwdId));
+      await _maplibreMapController.removeSource(FwdGeoJsonHelper.lineGeoJsonSourceId(fwdId));
+    });
+    _polylines.clear();
+    //
+
+    // clear all polygons (polygon is a fruit of love of fill and line)
+    _polygons.forEach((fwdId, tuple) async {
+      await _maplibreMapController.removeLayer(FwdGeoJsonHelper.lineLayerId(fwdId));
+      await _maplibreMapController.removeSource(FwdGeoJsonHelper.lineGeoJsonSourceId(fwdId));
+      await _maplibreMapController.removeLayer(FwdGeoJsonHelper.fillLayerId(fwdId));
+      await _maplibreMapController.removeSource(FwdGeoJsonHelper.fillGeoJsonSourceId(fwdId));
+    });
+    _polygons.clear();
+    //
+  }
+
   Future<void> animateMarker({
     required FwdId markerId,
     required LatLng newLatLng,
