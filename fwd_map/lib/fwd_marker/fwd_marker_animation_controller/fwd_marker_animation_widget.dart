@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/widgets.dart';
+import 'package:fwd_minimal_sdk/fwd_minimal_sdk.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
 
-import '../../fwd_id/fwd_id.dart';
 import '../../fwd_map_helpers/fwd_geo_json_helper.dart';
 import '../dynamic/fwd_dynamic_marker.dart';
 import '../dynamic/fwd_dynamic_marker_widget.dart';

@@ -1,9 +1,8 @@
 import 'dart:math';
 import 'package:flutter/widgets.dart';
+import 'package:fwd_minimal_sdk/fwd_minimal_sdk.dart';
 import 'package:location/location.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
-import 'package:tuple/tuple.dart';
-import 'fwd_id/fwd_id.dart';
 import 'fwd_map_helpers/fwd_geo_json_helper.dart';
 import 'fwd_marker/dynamic/fwd_dynamic_marker.dart';
 import 'fwd_marker/fwd_marker_animation_controller/fwd_marker_animation_controller.dart';

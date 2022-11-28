@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/widgets.dart';
+import 'package:fwd_minimal_sdk/fwd_minimal_sdk.dart';
 import 'package:maplibre_gl/mapbox_gl.dart';
-import '../../fwd_id/fwd_id.dart';
 
 class FwdDynamicMarker {
   const FwdDynamicMarker({

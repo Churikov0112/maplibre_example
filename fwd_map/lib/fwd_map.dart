@@ -2,8 +2,8 @@ library fwd_map;
 
 import 'dart:math' show Point;
 import 'package:flutter/widgets.dart' show StatefulWidget, State, BuildContext, Widget, Stack;
+import 'package:fwd_minimal_sdk/fwd_minimal_sdk.dart';
 import 'package:maplibre_gl/mapbox_gl.dart' show MaplibreMap, MaplibreMapController, CameraPosition, LatLng;
-import 'fwd_id/fwd_id.dart' show FwdId;
 import 'fwd_map_controller.dart' show FwdMapController;
 import 'fwd_marker/fwd_marker_animation_controller/fwd_marker_animation_widget.dart' show FwdMarkerAnimationWidget;
 

@@ -103,9 +103,11 @@ packages:
   fwd_map:
     dependency: "direct main"
     description:
-      path: fwd_map
-      relative: true
-    source: path
+      path: "."
+      ref: main
+      resolved-ref: "43840ad81923b2bebc98217969815364a2e3d427"
+      url: "https://github.com/91team/fwd_map.git"
+    source: git
     version: "0.0.1"
   http:
     dependency: transitive
